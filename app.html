@@ -1,0 +1,2362 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>fari · App</title>
+
+<!-- Fonts: Inter (body) + Space Grotesk (headings) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS (Play CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: '#07090d',
+        surface: '#0d1016',
+        'surface2': '#15161b',
+        pink: '#e91e63',
+        'pink-bright': '#ff347e',
+        green: '#ffb627',
+      },
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['"Space Grotesk"', 'Inter', 'sans-serif'],
+      },
+    }
+  }
+}
+</script>
+
+<style>
+:root {
+  --pink: #e91e63;
+  --pink-bright: #ff347e;
+  --green: #ffb627;
+  --muted: #8b8b94;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html{background:#000}
+body{font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#07090d;color:#fff;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+img{display:block;max-width:100%}
+
+/* ── Phone frame ── */
+.phone-frame{box-shadow:0 0 0 12px #1a1a1e,0 0 0 13px #33333a,0 50px 120px rgba(0,0,0,.7)}
+.phone-frame::before{content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:120px;height:34px;background:#000;border-radius:20px;z-index:100}
+
+/* ── Scrollbar ── */
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+
+/* ── Page transition ── */
+.page-content{display:none}
+.page-content.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ Aceternity / Magic UI Effects ══ */
+
+/* Animated gradient text */
+.gradient-text{
+  background:linear-gradient(135deg,#ff347e,#ff6d9b);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+@keyframes gradient-shift{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+
+/* Shimmer shine on buttons */
+.shimmer{position:relative;overflow:hidden}
+.shimmer::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.25) 50%,transparent 100%);
+  background-size:200% 100%;animation:shimmer 2.5s infinite;pointer-events:none;
+}
+@keyframes shimmer{
+  0%{background-position:-100% 0}
+  100%{background-position:200% 0}
+}
+
+/* Glow pulse */
+@keyframes glow-pulse{
+  0%,100%{opacity:.4}
+  50%{opacity:.7}
+}
+.glow-pulse{animation:glow-pulse 3s ease infinite}
+
+/* 3D card press */
+.card-3d{transition:transform .2s ease;transform-style:preserve-3d;will-change:transform}
+.card-3d:active{transform:perspective(800px) rotateX(6deg) scale(.96)}
+
+/* Plus button — animated multi-color gradient */
+.plus-grad{
+  background:linear-gradient(135deg,#ff347e,#ff6d9b);
+  animation:gradient-shift 3s ease infinite;
+}
+.plus-glow{
+  box-shadow:0 0 20px rgba(255,52,126,.45),0 0 40px rgba(255,52,126,.15),inset 0 1px 0 rgba(255,255,255,.2);
+}
+
+/* Tab bar — gradient icon fill + enhanced glow */
+.tab{color:#6b6b76;transition:color .15s}
+.tab.active{color:#fff}
+.tab svg{width:24px;height:24px;transition:transform .2s}
+.tab.active svg{transform:scale(1.12)}
+.tab-ico svg{width:24px;height:24px}
+.tab-glow{opacity:0;transition:opacity .25s;transform:scale(.85)}
+.tab.active .tab-glow{opacity:1;transform:scale(1)}
+.tab-pill{opacity:0;transform:scaleY(.5);transition:all .2s}
+.tab.active .tab-pill{opacity:1;transform:scaleY(1)}
+
+/* Category tile — no border, clean vivid icons */
+.cat-ico{transition:all .15s;will-change:transform}
+.cat-ico svg{width:32px;height:32px;transition:transform .2s}
+.cat.active .cat-ico svg{transform:scale(1.12)}
+.cat .lbl{color:#6b6b76;transition:color .15s}
+.cat.active .lbl{color:#fff}
+/* Category chip — single row */
+.cat-chip svg{width:18px;height:18px}
+.cat-chip span:last-child{color:rgba(255,255,255,.55);transition:color .15s}
+.cat-chip.active span:last-child{color:#fff}
+/* Search icon sizing */
+#search-icon svg{width:18px;height:18px}
+#search-icon-r svg{width:20px;height:20px}
+
+/* Create overlay */
+.create-overlay{opacity:0;pointer-events:none;transition:opacity .25s}
+.create-overlay.open{opacity:1;pointer-events:auto}
+.create-sheet{transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.create-overlay.open .create-sheet{transform:translateY(0)}
+.create-overlay.preview-mode .edit-only{display:none}
+.create-overlay.preview-mode .preview-only{display:block}
+.create-overlay.preview-mode #tpl-preview{box-shadow:inset 0 0 0 2px rgba(255,52,126,.72)}
+/* Quit confirm — bottom sheet */
+.quit-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.quit-overlay.open{opacity:1;pointer-events:auto}
+.quit-sheet{transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.quit-overlay.open .quit-sheet{transform:translateY(0)}
+
+/* Template picker sheet (from "+" tab) */
+.tpl-picker-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.tpl-picker-overlay.open{opacity:1;pointer-events:auto}
+.tpl-picker-sheet{transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1)}
+.tpl-picker-overlay.open .tpl-picker-sheet{transform:translateY(0)}
+.tpl-pick-card{transition:transform .18s ease,border-color .18s ease}
+.tpl-pick-card:active{transform:scale(.96);border-color:rgba(255,52,126,.6)}
+
+/* Settings overlay */
+.settings-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.settings-overlay.open{opacity:1;pointer-events:auto}
+.settings-sheet{transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.settings-overlay.open .settings-sheet{transform:translateY(0)}
+/* Search page overlay */
+.search-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.search-overlay.open{opacity:1;pointer-events:auto}
+
+/* Photo source action sheet */
+.photo-source-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.photo-source-overlay.open{opacity:1;pointer-events:auto}
+.photo-source-sheet{transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.photo-source-overlay.open .photo-source-sheet{transform:translateY(0)}
+.photo-spinner{width:28px;height:28px;border:2px solid rgba(255,255,255,.22);border-top-color:#ff6d9b;border-right-color:#ff347e;border-radius:50%;animation:spin .85s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* Share sheet */
+.share-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.share-overlay.open{opacity:1;pointer-events:auto}
+.share-sheet{transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.share-overlay.open .share-sheet{transform:translateY(0)}
+
+/* Paywall flow */
+.paywall-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.paywall-overlay:not(.open) *{pointer-events:none!important}
+.paywall-overlay.open{opacity:1;pointer-events:auto}
+.paywall-screen{display:none}
+.paywall-screen.active{display:flex;animation:fadeUp .3s ease both}
+.paywall-shell{transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,0,1);background:#050507}
+.paywall-overlay.open .paywall-shell{transform:translateY(0)}
+#paywall-overlay.open{pointer-events:none}
+.paywall-strike{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:rgba(255,255,255,.7)}
+.paywall-bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;filter:saturate(1.18) contrast(1.08);opacity:.96}
+.paywall-vignette{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.02) 24%,rgba(0,0,0,.20) 43%,rgba(0,0,0,.64) 62%,rgba(0,0,0,.90) 84%,rgba(0,0,0,.98) 100%);pointer-events:none}
+.paywall-topbar{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 42px) 20px 0;pointer-events:none}
+.paywall-close{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:rgba(255,255,255,.70);background:transparent;border:0;pointer-events:auto;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.paywall-close:active{transform:scale(.96)}
+.paywall-offer-content{width:100%;display:flex;flex-direction:column;gap:10px;padding:0 24px max(18px,env(safe-area-inset-bottom));text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.paywall-copy-block{margin-bottom:4px}
+.paywall-brand-title{font-family:Orbitron,Inter,sans-serif;font-size:25px;line-height:1;font-weight:800;letter-spacing:.01em;color:#efeaff}
+.paywall-benefits{display:grid;gap:10px;margin-top:12px}
+.paywall-benefit{display:flex;align-items:center;gap:10px;font-size:14.5px;line-height:1.1;font-weight:900;color:rgba(255,255,255,.9)}
+.paywall-benefit::before{content:"✓";display:grid;place-items:center;width:18px;height:18px;color:#fff;font-size:18px;font-weight:1000;filter:drop-shadow(0 2px 5px rgba(0,0,0,.45))}
+.paywall-plan-stack{display:grid;gap:13px;margin-top:2px}
+.paywall-plan{position:relative;width:100%;min-height:70px;border-radius:27px;border:0;background:rgba(38,38,45,.86);backdrop-filter:blur(16px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 14px 28px rgba(0,0,0,.22);padding:16px 27px;color:white;text-align:left}
+.paywall-plan.featured{border:2.5px solid #9cff22;background:rgba(68,62,79,.82);box-shadow:0 0 0 1px rgba(156,255,34,.3),0 0 18px rgba(156,255,34,.30),inset 0 1px 0 rgba(255,255,255,.12)}
+.paywall-save-pill{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);border-radius:999px;background:linear-gradient(180deg,#ff244e,#ff9b2c);padding:4px 13px;font-size:10px;font-weight:1000;color:#fff;box-shadow:0 3px 9px rgba(0,0,0,.30);white-space:nowrap}
+.paywall-plan-inner{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.paywall-plan-name{font-size:15px;font-weight:1000;line-height:1.05;color:rgba(255,255,255,.9)}
+.paywall-plan-note{margin-top:4px;font-size:12px;font-weight:800;color:rgba(255,255,255,.62)}
+.paywall-plan-price{text-align:right;color:#baff20;font-size:17px;font-weight:1000;line-height:1.05;text-shadow:0 0 12px rgba(157,255,32,.22)}
+.paywall-plan-price span{display:block;margin-top:5px;font-size:16px}
+.paywall-pack-dots{display:none}
+.paywall-pack-dots button{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.28);font-size:0;transition:all .2s ease}
+.paywall-pack-dots button.active{width:22px;background:#9dff20;box-shadow:0 0 14px rgba(157,255,32,.4)}
+.paywall-fineprint{text-align:center;font-size:10.5px;line-height:1.2;font-weight:800;color:rgba(255,255,255,.76);margin-top:5px}
+.paywall-legal-row{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;text-align:center;font-size:9.5px;line-height:1.1;font-weight:800;color:rgba(255,255,255,.50);white-space:nowrap;overflow:hidden}
+.paywall-legal-row a{color:rgba(255,255,255,.66);text-decoration:underline;text-underline-offset:2px}
+.paywall-continue{background:linear-gradient(180deg,#dfff25 0%,#a7ff00 100%);color:#263400;box-shadow:0 14px 28px rgba(157,255,32,.24)}
+.paywall-continue:active{transform:scale(.985)}
+.paywall-cta{background:linear-gradient(180deg,#dfff25 0%,#a7ff00 100%);color:#263400;box-shadow:0 14px 30px rgba(157,255,32,.28)}
+.paywall-cta:active{transform:scale(.985)}
+.paywall-cta-tall{background:linear-gradient(180deg,#dfff25 0%,#a7ff00 100%);color:#263400;box-shadow:0 12px 28px rgba(157,255,32,.28)}
+.paywall-cta-tall:active{transform:scale(.985)}
+.paywall-green-card{background:linear-gradient(135deg,rgba(182,222,27,.6),rgba(28,170,121,.62));border:1px solid rgba(255,255,255,.18);box-shadow:0 -6px 30px rgba(157,255,32,.12),inset 0 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(18px)}
+.paywall-save-copy{padding:0 24px 12px;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.paywall-save-copy .paywall-brand-title{font-size:25px}
+.paywall-save-copy .paywall-benefits{gap:12px}
+.paywall-save-copy .paywall-benefit{font-size:15px;color:rgba(255,255,255,.62)}
+.paywall-save-panel{width:auto;margin:0 18px max(28px,env(safe-area-inset-bottom));border-radius:25px;background:linear-gradient(135deg,rgba(177,196,21,.76),rgba(37,170,127,.76));border:1px solid rgba(255,255,255,.16);padding:12px 18px 18px;color:white;text-align:center;box-shadow:0 -8px 30px rgba(0,0,0,.26);backdrop-filter:blur(18px)}
+.paywall-save-handle{width:58px;height:5px;border-radius:999px;background:rgba(255,255,255,.58);margin:0 auto 25px}
+.paywall-discount-compare{position:relative;margin:22px auto 28px;display:grid;grid-template-columns:1fr 1fr;max-width:286px;border-radius:18px;overflow:visible;background:rgba(255,255,255,.9);box-shadow:0 12px 24px rgba(0,0,0,.18)}
+.paywall-discount-price{min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#415034;font-weight:1000}
+.paywall-discount-price.old{background:#43ff16;color:rgba(50,70,28,.48);text-decoration:line-through;text-decoration-thickness:2px;border-radius:20px 0 0 20px}
+.paywall-discount-price.new{background:#fff6db;border-radius:0 20px 20px 0;color:#4f5638}
+.paywall-discount-price strong{font-size:29px;line-height:1}
+.paywall-discount-price small{font-size:16px;font-weight:900}
+.paywall-discount-arrow{position:absolute;left:50%;top:30px;transform:translateX(-50%);font-size:34px;color:#ffb22a;text-shadow:0 2px 4px rgba(0,0,0,.18);z-index:2}
+.paywall-discount-badge{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);white-space:nowrap;border-radius:999px;background:linear-gradient(180deg,#ff5252,#ff7551);color:#fff;padding:5px 12px;font-size:12px;font-weight:1000;box-shadow:0 5px 12px rgba(0,0,0,.2)}
+.paywall-back{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16)}
+/* Ken Burns effect on video when paywall is open */
+@keyframes paywallKenBurns{0%{transform:scale(1.04) translate(0,0)}33%{transform:scale(1.10) translate(-1.2%,-.8%)}66%{transform:scale(1.13) translate(1%,1%)}100%{transform:scale(1.08) translate(-.5%,.5%)}}
+#tpl-preview-video.paywall-active{animation:paywallKenBurns 16s ease-in-out infinite alternate}
+/* Countdown timer on save/retention screen */
+.countdown-pill{animation:countdownPulse 1.8s ease-in-out infinite}
+@keyframes countdownPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,52,126,.35);transform:scale(1)}50%{box-shadow:0 0 0 8px rgba(255,52,126,0);transform:scale(1.03)}}
+.countdown-urgent{animation:countdownUrgent .6s ease-in-out infinite}
+@keyframes countdownUrgent{0%,100%{color:#ff347e}50%{color:#ff6d9b}}
+/* Credit pack purchase — full-screen flow */
+.cp-screen{display:none}
+.cp-screen.active{display:flex;animation:fadeUp .3s ease both}
+#credit-overlay.open{pointer-events:auto}
+#credit-overlay .paywall-shell{transform:translateY(0);background:#07090d}
+
+/* Credit pack cards — horizontal scroll */
+.credit-pack-card{transition:transform .2s ease,border-color .2s ease;cursor:pointer}
+.credit-pack-card:active{transform:scale(.97)}
+.credit-pack-card .pack-glow{position:absolute;inset:0;opacity:0;transition:opacity .3s ease}
+.credit-pack-card.popular .pack-glow{opacity:1}
+.credit-pack-card .pack-badge{position:absolute;top:-1px;right:-1px;padding:3px 8px;border-radius:0 14px 0 8px;font-size:8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+/* Credits detail overlay */
+.credits-detail-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.credits-detail-overlay:not(.open) *{pointer-events:none!important}
+.credits-detail-overlay.open{opacity:1;pointer-events:auto}
+.credits-detail-sheet{transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,0,1)}
+.credits-detail-overlay.open .credits-detail-sheet{transform:translateY(0)}
+.result-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.result-overlay.open{opacity:1;pointer-events:auto}
+.result-screen{display:none}
+.result-screen.active{display:flex;animation:fadeUp .3s ease both}
+.result-progress{height:7px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.result-progress span{display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff347e,#ff6d9b);animation:load 1.25s ease-in-out infinite}
+@keyframes load{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}
+/* Apple Pay — native iOS payment confirmation */
+.apple-pay-overlay{opacity:0;pointer-events:none;transition:opacity .25s ease}
+.apple-pay-overlay:not(.open) *{pointer-events:none!important}
+.apple-pay-overlay.open{opacity:1;pointer-events:auto}
+.apple-pay-sheet{transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1)}
+.apple-pay-overlay.open .apple-pay-sheet{transform:translateY(0)}
+.ap-faceid-scan{animation:apScan 1s ease-in-out infinite}
+@keyframes apScan{0%,100%{opacity:.5}50%{opacity:1}}
+.ap-success{animation:apPop .4s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes apPop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* Turning-star loading animation (from web version) */
+.motion-mark{position:relative;width:170px;height:170px;margin:0 auto;filter:drop-shadow(0 0 24px rgba(255,45,111,.24));animation:starFloat 3.25s cubic-bezier(.42,0,.18,1) infinite}
+.motion-star{position:absolute;left:50%;top:50%;width:100px;height:100px;transform:translate(-50%,-50%);background:conic-gradient(from 18deg,#fff 0 8%,#ffc5d8 12% 18%,#ff4f8d 25% 34%,#fff 42% 48%,#ff8db3 58% 68%,#ff8db3 76% 84%,#fff 92% 100%);clip-path:polygon(50% 0,56% 36%,86% 14%,64% 44%,100% 50%,64% 56%,86% 86%,56% 64%,50% 100%,44% 64%,14% 86%,36% 56%,0 50%,36% 44%,14% 14%,44% 36%);box-shadow:0 0 22px rgba(255,45,111,.38),0 0 54px rgba(255,52,126,.2);animation:starSpin 3s cubic-bezier(.5,0,.15,1) infinite}
+.motion-star:before{content:"";position:absolute;inset:20px;background:linear-gradient(135deg,#fff,#ffd3e1 48%,#ff6a99);clip-path:inherit;filter:blur(.2px);opacity:.92;animation:starInner 1.8s ease-in-out infinite}
+.motion-star:after{content:"";position:absolute;inset:38px;border-radius:50%;background:#fff;box-shadow:0 0 16px rgba(255,255,255,.74);opacity:.72}
+.motion-orbit{position:absolute;left:50%;top:50%;width:144px;height:144px;margin:-72px 0 0 -72px;border:1px solid rgba(255,255,255,.08);border-top-color:rgba(255,255,255,.3);border-right-color:rgba(255,106,153,.38);border-bottom-color:rgba(255,109,155,.28);border-radius:48% 52% 46% 54%;animation:sparkOrbit 3.1s linear infinite}
+.motion-orbit:before,.motion-orbit:after,.motion-spark:before{content:"";position:absolute;border-radius:50%;background:#fff;box-shadow:0 0 14px rgba(255,106,153,.62)}
+.motion-orbit:before{left:47%;top:-3px;width:5px;height:5px}
+.motion-orbit:after{right:13px;bottom:25px;width:3px;height:3px;background:#ff9ab7;box-shadow:0 0 12px rgba(255,106,153,.62)}
+.motion-spark{position:absolute;left:50%;top:50%;display:block;width:154px;height:154px;margin:-77px 0 0 -77px;border-radius:50%;animation:sparkOrbitReverse 4.4s linear infinite}
+.motion-spark:before{left:25px;top:51px;width:4px;height:4px;background:#fff2f7}
+.motion-spark.b{animation-duration:5.4s;transform:scale(.78) rotate(32deg)}
+.motion-spark.c{animation-duration:3.35s;transform:scale(.58) rotate(-24deg)}
+@keyframes starFloat{0%,100%{transform:translate3d(0,9px,0) scale(.94)}28%{transform:translate3d(-10px,-15px,0) scale(1.06)}56%{transform:translate3d(11px,-7px,0) scale(.98)}78%{transform:translate3d(4px,4px,0) scale(1.02)}}
+@keyframes starSpin{0%{transform:translate(-50%,-50%) rotate(0deg) scale(.78)}38%{transform:translate(-50%,-50%) rotate(146deg) scale(1.13)}66%{transform:translate(-50%,-50%) rotate(236deg) scale(.92)}100%{transform:translate(-50%,-50%) rotate(360deg) scale(.78)}}
+@keyframes starInner{0%,100%{transform:scale(.7) rotate(0deg);opacity:.62}46%{transform:scale(1.08) rotate(-36deg);opacity:1}}
+@keyframes sparkOrbit{from{transform:rotate(0deg) scale(.9)}50%{transform:rotate(180deg) scale(1.08)}to{transform:rotate(360deg) scale(.9)}}
+@keyframes sparkOrbitReverse{from{transform:rotate(360deg) scale(.8)}50%{transform:rotate(180deg) scale(1.08)}to{transform:rotate(0deg) scale(.8)}}
+.share-toast{opacity:0;transform:translateY(8px);transition:all .2s ease}
+.share-toast.show{opacity:1;transform:translateY(0)}
+.center-toast{opacity:0;transform:scale(.92);transition:opacity .3s ease,transform .3s ease;pointer-events:none}
+.center-toast.show{opacity:1;transform:scale(1);pointer-events:auto}
+.template-video{background:#050507}
+.template-video video{object-fit:cover}
+.template-slot{box-shadow:0 4px 10px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.18)}
+.template-slot.empty{background:rgba(12,12,18,.72);border:1px solid rgba(255,255,255,.22)}
+.template-slot.filled{border:1.5px solid #ff347e;background:#111}
+
+/* Carousel — one card at a time, fade transition */
+.carousel-card{position:absolute;inset:0;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.carousel-card.active{opacity:1;pointer-events:auto}
+
+/* Dynamic CSS */
+.picker-card.sel{border-color:#ff347e;box-shadow:0 0 0 1px #ff347e,0 0 20px rgba(255,52,126,.2)}
+.picker-card.sel .check{opacity:1}
+.upload-area.has-photo{border-style:solid}
+
+/* Mobile */
+@media(max-width:420px){
+  body{background:#07090d}
+  .phone-frame{width:100vw;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+  .phone-frame::before{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Phosphor Icons (duotone) ── -->
+<script>
+const PH={
+  "grid-four":['M208,56V200a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H200A8,8,0,0,1,208,56Z','M200,40H56A16,16,0,0,0,40,56V200a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,80H136V56h64ZM120,56v64H56V56ZM56,136h64v64H56Zm144,64H136V136h64v64Z'],
+  "trophy":['M200,48v63.1c0,39.7-31.75,72.6-71.45,72.9A72,72,0,0,1,56,112V48Z','M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8Zm144-8.9c0,35.52-29,64.64-64,64.9a64,64,0,0,1-64-64V56H192ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z'],
+  "paw-print":['M232,108a20,20,0,1,1-20-20A20,20,0,0,1,232,108ZM64,108a20,20,0,1,0-20,20A20,20,0,0,0,64,108ZM92,80A20,20,0,1,0,72,60,20,20,0,0,0,92,80Zm72,0a20,20,0,1,0-20-20A20,20,0,0,0,164,80Zm19.24,75.85A43.46,43.46,0,0,1,162.57,130a36,36,0,0,0-69.14,0,43.49,43.49,0,0,1-20.67,25.9,32,32,0,0,0,27.73,57.62,72.49,72.49,0,0,1,55,0,32,32,0,0,0,27.73-57.62Z','M212,80a28,28,0,1,0,28,28A28,28,0,0,0,212,80Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,212,120ZM72,108a28,28,0,1,0-28,28A28,28,0,0,0,72,108ZM44,120a12,12,0,1,1,12-12A12,12,0,0,1,44,120ZM92,88A28,28,0,1,0,64,60,28,28,0,0,0,92,88Zm0-40a12,12,0,1,1-12,12A12,12,0,0,1,92,48Zm72,0a12,12,0,1,1-12,12A12,12,0,0,1,164,48Zm19.24,107.85a43.46,43.46,0,0,0-20.67-25.9,36,36,0,0,0-69.14,0,43.49,43.49,0,0,1-20.67,25.9,32,32,0,0,0,27.73,57.62,72.49,72.49,0,0,1,55,0,32,32,0,0,0,27.73-57.62Z'],
+  "heart":['M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z','M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z'],
+  "users":['M136,108A52,52,0,1,1,84,56,52,52,0,0,1,136,108Z','M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z'],
+  "confetti":['M58.89,154.89l42.22,42.22-50.63,18.4a7.79,7.79,0,0,1-10-10Zm138.82-4.72L105.83,58.29A7.79,7.79,0,0,0,93,61.14l-14.9,41,75.82,75.82,41-14.9A7.79,7.79,0,0,0,197.71,150.17Z','M111.49,52.63a15.8,15.8,0,0,0-26,5.77L33,202.78A15.83,15.83,0,0,0,47.76,224a16,16,0,0,0,5.46-1l144.37-52.5a15.8,15.8,0,0,0,5.78-26Zm-8.33,135.21-35-35,13.16-36.21,58.05,58.05Zm-55,20,14-38.41,24.45,24.45ZM156,168.64,87.36,100l13-35.87,91.43,91.43Z'],
+  "film-slate":['M67.71,64.59l47.79,27.6L40.43,112,32.27,82a7.76,7.76,0,0,1,5.58-9.52ZM199.84,37.76a7.9,7.9,0,0,0-9.66-5.49L126.61,49.05,174.4,76.64,208,67.77Z','M216,104H102.09L210,75.51a8,8,0,0,0,5.68-9.84l-8.16-30a15.93,15.93,0,0,0-19.42-11.13L35.81,64.74a15.75,15.75,0,0,0-9.7,7.4,15.51,15.51,0,0,0-1.55,12L32,111.56c0,.14,0,.29,0,.44v88a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V112A8,8,0,0,0,216,104ZM192.16,40l6,22.07-22.62,6L147.42,51.83Zm-66.69,17.6,28.12,16.24-36.94,9.75L88.53,67.37Zm-79.4,44.62-6-22.08,26.5-7L94.69,89.4ZM208,200H48V120H208v80Z'],
+  "magnifying-glass":['M192,112a80,80,0,1,1-80-80A80,80,0,0,1,192,112Z','M229.66,218.34,179.6,168.28a88.21,88.21,0,1,0-11.32,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z'],
+  "plus":['M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z','M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z'],
+  "user-circle":['M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z','M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z'],
+  "globe":['M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z','M128,24h0A104,104,0,1,0,232,128,104.12,104.11,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Z'],
+  "bell":['M208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,139.81,56,104a72,72,0,0,1,144,0c0,35.82,8.3,64.6,14.9,76A8,8,0,0,1,208,192Z','M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z'],
+  "question":['M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z','M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z'],
+  "envelope-simple":['M224,56l-96,88L32,56Z','M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM203.43,64,128,133.15,52.57,64ZM216,192H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z'],
+  "file-text":['M208,88H152V32Z','M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z'],
+  "shield":['M216,56v56c0,96-88,120-88,120S40,208,40,112V56a8,8,0,0,1,8-8H208A8,8,0,0,1,216,56Z','M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.27,47,25.53a8,8,0,0,0,4.2,0c1-.26,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0Z'],
+  "arrows-clockwise":['M216,128a88,88,0,1,1-88-88A88,88,0,0,1,216,128Z','M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z'],
+  "info":['M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z','M144,176a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176Zm88-48A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128ZM124,96a12,12,0,1,0-12-12A12,12,0,0,0,124,96Z'],
+  "arrow-right":['M216,128l-72,72V56Z','M221.66,122.34l-72-72A8,8,0,0,0,136,56v64H40a8,8,0,0,0,0,16h96v64a8,8,0,0,0,13.66,5.66l72-72A8,8,0,0,0,221.66,122.34ZM152,180.69V75.31L204.69,128Z'],
+  "x":['M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z','M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z'],
+  "camera":['M208,64H176L160,40H96L80,64H48A16,16,0,0,0,32,80V192a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V80A16,16,0,0,0,208,64ZM128,168a36,36,0,1,1,36-36A36,36,0,0,1,128,168Z','M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z'],
+  "coins":['M240,132c0,19.88-35.82,36-80,36-19.6,0-37.56-3.17-51.47-8.44h0C146.76,156.85,176,142,176,124V96.72h0c212.52,100.06,240,114.58,240,132ZM176,84c0-19.88-35.82-36-80-36S16,64.12,16,84s35.82,36,80,36S176,103.88,176,84Z','M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM232,132c0,13.22-30.79,28-72,28-3.73,0-7.43-.13-11.08-.37C170.49,151.77,184,139,184,124V105.74C213.87,110.19,232,122.27,232,132ZM72,150.25V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54v23.79A183.74,183.74,0,0,0,96,152,183.74,183.74,0,0,0,72,150.25Zm104-16.25c0,13.22-30.79,28-72,28-3.73,0-7.43-.13-11.08-.37C170.49,151.77,184,139,184,124V105.74C213.87,110.19,232,122.27,232,132Z'],
+  "star":['M229.06,108.79l-48.7,42,14.88,62.79a8.4,8.4,0,0,1-12.52,9.17L128,189.09,73.28,222.74a8.4,8.4,0,0,1-12.52-9.17l14.88-62.79-48.7-42A8.46,8.46,0,0,1,31.73,94L95.64,88.8l24.62-59.6a8.36,8.36,0,0,1,15.48,0l24.62,59.6L224.27,94A8.46,8.46,0,0,1,229.06,108.79Z','M239.18,97.26A16.38,16.38,0,0,0,224.92,86l-59-4.76L143.14,26.15a16.36,16.36,0,0,0-30.27,0L90.11,81.23,31.08,86a16.46,16.46,0,0,0-9.37,28.86l45,38.83L53,211.75a16.38,16.38,0,0,0,24.5,17.82L128,198.49l50.53,31.08A16.4,16.4,0,0,0,203,211.75l-13.76-58.07,45-38.83A16.43,16.43,0,0,0,239.18,97.26Z'],
+  "sparkle":['M194.82,151.43l-55.09,20.3-20.3,55.09a7.92,7.92,0,0,1-14.86,0l-20.3-55.09-55.09-20.3a7.92,7.92,0,0,1,0-14.86l55.09-20.3,20.3-55.09a7.92,7.92,0,0,1,14.86,0l20.3,55.09,55.09,20.3A7.92,7.92,0,0,1,194.82,151.43Z','M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88Z'],
+  "play":['M232,128a104,104,0,1,1-104-104A104,104,0,0,1,232,128Z','M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM96,168V88a8,8,0,0,1,12.24-6.78l72,40a8,8,0,0,1,0,13.56l-72,40A8,8,0,0,1,96,168Z'],
+  "check":['M232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Z','M205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z'],
+};
+function ph(name,color){const p=PH[name];if(!p)return'';return`<svg viewBox="0 0 256 256" fill="${color||'currentColor'}"><path d="${p[0]}" opacity=".2"/><path d="${p[1]}"/></svg>`;}
+function phTab(name,active){
+  const p=PH[name];if(!p)return'';
+  if(!active) return `<svg viewBox="0 0 256 256" fill="#6b6b76"><path d="${p[1]}"/></svg>`;
+  const uid='gtab-'+name;
+  return `<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="${uid}" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#ff347e"/><stop offset="60%" stop-color="#ff6d9b"/><stop offset="100%" stop-color="#ff8ab5"/>
+</linearGradient></defs>
+<path d="${p[0]}" fill="url(#${uid})" opacity=".25"/>
+<path d="${p[1]}" fill="url(#${uid})"/>
+</svg>`;
+}
+</script>
+
+<!-- ── PHONE ── -->
+<div class="phone-frame relative w-[390px] h-[844px] overflow-hidden bg-bg rounded-[54px]">
+
+  <!-- Status Bar -->
+  <div class="h-[54px] flex items-end justify-between px-7 pb-1.5 text-[15px] font-semibold relative z-50 shrink-0">
+    <span>9:41</span>
+    <span class="flex items-center gap-1.5">
+      <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v5H2zm4-4h2v9H6zm4-4h2v13h-2zm4-4h2v17h-2zm4-4h2v21h-2z"/></svg>
+      <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7 3 2.7 6.5 1 11c1.7 4.5 6 8 11 8s9.3-3.5 11-8c-1.7-4.5-6-8-11-8zm0 13a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="17" height="10" rx="2.5"/><rect x="4" y="9" width="13" height="6" rx="1" fill="currentColor"/><path d="M22 9.5v5" stroke-linecap="round"/></svg>
+    </span>
+  </div>
+
+  <!-- Screen — starts below status bar -->
+  <div class="absolute left-0 right-0 bottom-0 top-[54px] flex flex-col overflow-hidden">
+
+    <!-- ══ TEMPLATES PAGE ══ -->
+    <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar" id="page-tpl">
+      <div class="page-content active" id="tpl-content">
+
+        <!-- Template carousel — full-bleed with top bar -->
+        <div class="relative">
+          <div class="relative overflow-hidden" style="aspect-ratio:16/9" id="tpl-carousel"></div>
+          <div class="absolute top-0 left-0 right-0 z-20 flex items-center justify-start px-4 pt-3 pb-2">
+            <img src="assets/fari-logo-symbol.png" alt="fari" class="h-10 w-auto object-contain drop-shadow-lg">
+          </div>
+        </div>
+        <!-- Gradient bridge -->
+        <div class="relative -mt-6 pt-3 pb-1 bg-gradient-to-b from-transparent to-bg"></div>
+
+        <!-- Search bar — clickable, icon on right -->
+        <div class="px-[18px] pb-3">
+          <div class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl backdrop-blur-md bg-white/[0.04] border border-white/10 cursor-pointer transition-colors active:bg-white/[.08]" onclick="openSearchPage()">
+            <span class="text-[13px] text-white/30 flex-1">Buscar modelos...</span>
+            <span class="shrink-0 w-[18px] h-[18px] grid place-items-center" id="search-icon"></span>
+          </div>
+        </div>
+
+        <!-- Category chips — horizontal scroll with icons -->
+        <div class="pb-3">
+          <div class="flex justify-between gap-2 px-[18px]" id="cats"></div>
+        </div>
+
+        <!-- Template grid -->
+        <div class="px-[18px]">
+          <div class="font-heading text-base font-bold tracking-tight mb-2.5 flex items-center justify-between">
+            <span id="grid-title" class="text-white">Popular Templates</span>
+            <span class="text-[11px] font-medium text-white/40 cursor-pointer transition-colors active:text-white/70" onclick="openTemplatePicker()">See all →</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pb-6" id="tpl-grid"></div>
+        </div>
+        <div class="h-4"></div>
+      </div>
+    </div>
+
+    <!-- ══ ME PAGE ══ -->
+    <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar" id="page-me" style="display:none">
+      <div class="page-content" id="me-content">
+
+        <div class="px-[18px] pt-3 pb-3">
+          <!-- Top — avatar + credits + settings -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="relative w-14 h-14 rounded-full p-[2.5px] shrink-0 cursor-pointer transition-transform active:scale-95 border border-white/15" onclick="openAvatarPhotoSource()">
+                <div class="w-full h-full rounded-full bg-surface overflow-hidden grid place-items-center">
+                  <img id="avatar-img" class="hidden w-full h-full object-cover" alt="">
+                  <svg id="avatar-placeholder" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"><circle cx="12" cy="8" r="4"/><path d="M6 21v-1a6 6 0 0 1 12 0v1"/></svg>
+                </div>
+                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-white/15 grid place-items-center shrink-0 border-2 border-bg">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                </div>
+              </div>
+              <input type="file" id="avatar-file-input" accept="image/*" class="hidden" onchange="handleAvatarFile(this)">
+              <div>
+                <div class="text-[10px] text-white/45 font-medium">Welcome back</div>
+                <div class="text-[14px] font-bold text-white leading-tight">Fari user</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <div class="text-right cursor-pointer active:opacity-70 transition-opacity" onclick="openCreditsDetail()">
+                <div class="text-[9px] text-white/45 font-medium uppercase tracking-wider">Credits</div>
+                <div class="flex items-baseline gap-1 justify-end">
+                  <span class="text-[26px] leading-none font-black font-heading tracking-tight" style="background:linear-gradient(135deg,#fff 0%,#ff347e 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent" id="me-credits">0</span>
+                </div>
+              </div>
+              <button class="w-10 h-10 rounded-xl grid place-items-center bg-white/5 border border-white/10 text-white/70 shrink-0 transition-colors active:bg-white/10" onclick="openSettings()" aria-label="Settings">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Credit packs — horizontal draggable cards -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-medium text-white/45 uppercase tracking-wider">Credit packs</span>
+              <span class="text-[9px] text-white/30">Swipe →</span>
+            </div>
+            <div class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1 -mx-[18px] px-[18px] snap-x snap-mandatory" id="credit-packs"></div>
+          </div>
+
+          <!-- Explore guide — enlarged & beautified -->
+          <div class="relative rounded-3xl overflow-hidden border border-white/10 mb-1 cursor-pointer transition-transform active:scale-[.99]" onclick="switchTab('tpl')">
+            <!-- Template thumbnails strip -->
+            <div class="relative flex gap-2 px-4 pt-4">
+              <div class="relative w-[58px] h-[78px] rounded-xl overflow-hidden border border-white/15 shrink-0 shadow-lg" style="transform:rotate(-4deg) translateY(4px)">
+                <img class="w-full h-full object-cover" src="assets/template-gallery/fari-thumb-Feliz-aniversario.png" alt="">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              </div>
+              <div class="relative w-[62px] h-[84px] rounded-xl overflow-hidden border border-white/20 shrink-0 shadow-xl z-10" style="transform:translateY(0)">
+                <img class="w-full h-full object-cover" src="assets/template-gallery/fari-thumb-Casamento-Noivado.png" alt="">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              </div>
+              <div class="relative w-[58px] h-[78px] rounded-xl overflow-hidden border border-white/15 shrink-0 shadow-lg" style="transform:rotate(4deg) translateY(4px)">
+                <img class="w-full h-full object-cover" src="assets/template-gallery/fari-thumb-Formatura.png" alt="">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              </div>
+              <div class="relative w-[58px] h-[78px] rounded-xl overflow-hidden border border-white/15 shrink-0 shadow-lg" style="transform:rotate(-2deg) translateY(6px)">
+                <img class="w-full h-full object-cover" src="assets/template-gallery/fari-thumb-Pet-familia.png" alt="">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              </div>
+            </div>
+            <!-- Content -->
+            <div class="relative px-4 pt-3 pb-4">
+              <div class="flex items-center gap-1.5">
+                <div class="w-6 h-6 rounded-full grid place-items-center bg-white/10 shrink-0">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-[.12em] text-white/40">Get started</span>
+              </div>
+              <h3 class="font-heading text-[18px] leading-tight font-bold mt-2">Explore templates</h3>
+              <p class="text-[11px] leading-relaxed text-white/50 mt-1">Browse all templates and create your<br>first AI video in seconds.</p>
+              <div class="mt-3">
+                <button class="px-4 py-2 rounded-xl text-[12px] font-bold text-white bg-gradient-to-r from-pink to-pink-bright shadow-lg shadow-pink/25 transition-transform active:scale-[.97]">Explore now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History title -->
+        <div class="font-heading text-sm font-bold tracking-tight mb-2.5 flex items-center justify-between px-[18px]">
+          <span class="text-white">My creations</span>
+          <span class="text-[10px] font-medium text-white/40">Recent</span>
+        </div>
+
+        <!-- History list -->
+        <div class="px-[18px] pb-4" id="history-list"></div>
+        <div class="h-4"></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB BAR — glassmorphism + gradient icons + animated + button ══ -->
+    <div class="h-16 flex items-center justify-around backdrop-blur-2xl bg-black/30 border-t border-white/10 px-2 z-40 relative">
+      <button class="tab active relative flex flex-col items-center gap-1 text-[10px] font-medium w-[72px] shrink-0" id="tab-tpl" onclick="switchTab('tpl')">
+        <div class="tab-glow absolute -inset-x-2 -inset-y-0.5 rounded-xl blur-md" style="background:linear-gradient(135deg,rgba(255,52,126,.35),rgba(255,52,126,.15))"></div>
+        <span class="tab-ico relative grid place-items-center h-6" data-ph-tab="grid-four"></span>
+        <span class="relative">Modelos</span>
+        <div class="tab-pill absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style="background:linear-gradient(90deg,#ff347e,#ff6d9b)"></div>
+      </button>
+      <button class="shimmer plus-glow relative w-12 h-12 rounded-2xl overflow-hidden grid place-items-center shrink-0 transition-transform active:scale-90" onclick="openTemplatePicker()">
+        <div class="plus-grad absolute inset-0 rounded-2xl"></div>
+        <div class="absolute inset-0 rounded-2xl border border-white/25"></div>
+        <svg class="relative w-6 h-6" viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))">
+          <line x1="24" y1="11" x2="24" y2="37"/>
+          <line x1="11" y1="24" x2="37" y2="24"/>
+        </svg>
+      </button>
+      <button class="tab relative flex flex-col items-center gap-1 text-[10px] font-medium w-[72px] shrink-0" id="tab-me" onclick="switchTab('me')">
+        <div class="tab-glow absolute -inset-x-2 -inset-y-0.5 rounded-xl blur-md" style="background:linear-gradient(135deg,rgba(255,52,126,.35),rgba(255,52,126,.15))"></div>
+        <span class="tab-ico relative grid place-items-center h-6" data-ph-tab="user-circle"></span>
+        <span class="relative">Personal</span>
+        <div class="tab-pill absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style="background:linear-gradient(90deg,#ff347e,#ff6d9b)"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ TEMPLATE PICKER — from "+" tab ══ -->
+  <div class="tpl-picker-overlay absolute inset-0 z-[150] bg-black/60 backdrop-blur" id="tpl-picker-overlay" aria-hidden="true" onclick="if(event.target===this)closeTemplatePicker()">
+    <div class="tpl-picker-sheet absolute left-0 right-0 bottom-0 rounded-t-3xl bg-bg border-t border-white/10 max-h-[80vh] flex flex-col overflow-hidden">
+      <div class="pt-3 pb-3 px-5 flex flex-col items-center gap-3 border-b border-white/5 shrink-0">
+        <div class="w-10 h-1 rounded-full bg-white/20"></div>
+        <div class="w-full flex items-center justify-between">
+          <h2 class="font-heading text-base font-bold tracking-tight text-white">Choose a template</h2>
+          <button class="w-8 h-8 rounded-full bg-white/5 border border-white/10 grid place-items-center text-white/60" onclick="closeTemplatePicker()" aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-4">
+        <div class="grid grid-cols-2 gap-3" id="tpl-picker-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS OVERLAY ══ -->
+  <div class="settings-overlay absolute inset-0 z-[250] bg-bg flex flex-col overflow-hidden" id="settings-overlay" aria-hidden="true">
+    <div class="settings-sheet absolute inset-0 flex flex-col overflow-hidden bg-bg">
+      <div class="flex items-center gap-3 px-4 py-3 border-b border-white/10 shrink-0" style="padding-top:max(16px,env(safe-area-inset-top))">
+        <button class="w-9 h-9 rounded-xl grid place-items-center bg-white/5 border border-white/10 text-white/60 shrink-0 transition-colors active:bg-white/10" onclick="closeSettings()" aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <h2 class="font-heading text-base font-bold tracking-tight">Settings</h2>
+      </div>
+      <div class="flex-1 overflow-y-auto no-scrollbar px-[18px] py-5">
+
+        <!-- Preferences -->
+        <div class="mb-5">
+          <div class="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-2 pl-1">Preferences</div>
+          <div class="rounded-xl border border-white/10 backdrop-blur-md bg-white/[0.02] overflow-hidden">
+            <div class="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-white/[0.04]">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10 text-blue-400" data-ph="globe"></div>
+              <div class="flex-1 text-[13px] font-medium">Language</div>
+              <span class="text-[11px] text-white/40">English</span>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Support -->
+        <div class="mb-5">
+          <div class="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-2 pl-1">Support</div>
+          <div class="rounded-xl border border-white/10 backdrop-blur-md bg-white/[0.02] overflow-hidden">
+            <a class="flex items-center gap-3 px-3.5 py-3 border-b border-white/5 transition-colors active:bg-white/[0.04]" href="contact.html">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10" style="color:var(--green)" data-ph="question"></div>
+              <div class="flex-1 text-[13px] font-medium">Help center</div>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+            <a class="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-white/[0.04]" href="contact.html">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10 text-purple-400" data-ph="envelope-simple"></div>
+              <div class="flex-1 text-[13px] font-medium">Contact us</div>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Follow us -->
+        <div class="mb-5">
+          <div class="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-2 pl-1">Follow us</div>
+          <div class="rounded-xl border border-white/10 backdrop-blur-md bg-white/[0.02] overflow-hidden">
+            <a class="flex items-center gap-3 px-3.5 py-3 border-b border-white/5 transition-colors active:bg-white/[0.04]" href="https://www.instagram.com/farivideo" target="_blank" rel="noopener">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10" style="color:#f472b6">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>
+              </div>
+              <div class="flex-1 text-[13px] font-medium">Instagram</div>
+              <span class="text-[11px] text-white/40">@farivideo</span>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+            <a class="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-white/[0.04]" href="https://www.tiktok.com/@farivideo" target="_blank" rel="noopener">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10" style="color:#22d3ee">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.84 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+              </div>
+              <div class="flex-1 text-[13px] font-medium">TikTok</div>
+              <span class="text-[11px] text-white/40">@farivideo</span>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Legal -->
+        <div class="mb-5">
+          <div class="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-2 pl-1">Legal</div>
+          <div class="rounded-xl border border-white/10 backdrop-blur-md bg-white/[0.02] overflow-hidden">
+            <a class="flex items-center gap-3 px-3.5 py-3 border-b border-white/5 transition-colors active:bg-white/[0.04]" href="terms.html">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10 text-blue-400" data-ph="file-text"></div>
+              <div class="flex-1 text-[13px] font-medium">Terms of Service</div>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+            <a class="flex items-center gap-3 px-3.5 py-3 border-b border-white/5 transition-colors active:bg-white/[0.04]" href="privacy.html">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10 text-emerald-400" data-ph="shield"></div>
+              <div class="flex-1 text-[13px] font-medium">Privacy Policy</div>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+            <a class="flex items-center gap-3 px-3.5 py-3 border-b border-white/5 transition-colors active:bg-white/[0.04]" href="refund.html">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10 text-amber-400" data-ph="coins"></div>
+              <div class="flex-1 text-[13px] font-medium">Refund Policy</div>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+            <a class="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-white/[0.04]" href="company.html">
+              <div class="w-8 h-8 rounded-lg grid place-items-center shrink-0 backdrop-blur-md bg-white/5 border border-white/10 text-purple-400" data-ph="info"></div>
+              <div class="flex-1 text-[13px] font-medium">About Fari</div>
+              <span class="text-white/30 shrink-0" data-ph="arrow-right"></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="text-center text-[10px] text-white/25 pt-2">© 2026 Medrix AI · Fari</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SEARCH PAGE — focused search with history & suggestions ══ -->
+  <div class="search-overlay absolute inset-0 z-[260] bg-bg flex flex-col overflow-hidden" id="search-overlay" aria-hidden="true">
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-white/10 shrink-0" style="padding-top:max(16px,env(safe-area-inset-top))">
+      <button class="w-9 h-9 rounded-xl grid place-items-center bg-white/5 border border-white/10 text-white/60 shrink-0 transition-colors active:bg-white/10" onclick="closeSearchPage()" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="flex-1 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10">
+        <span class="shrink-0 w-[18px] h-[18px] grid place-items-center" id="search-icon-r"></span>
+        <input type="text" placeholder="Search templates..." class="flex-1 bg-transparent text-[14px] text-white placeholder-white/30 outline-none" id="search-input" oninput="searchTemplates(this.value)" />
+        <button class="shrink-0 w-5 h-5 rounded-full grid place-items-center text-white/40 hover:text-white/70 transition-colors" id="search-clear" style="display:none" onclick="clearSearch()" aria-label="Clear">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty state: history + suggestions (shown when input is empty) -->
+    <div class="flex-1 overflow-y-auto no-scrollbar" id="search-empty">
+      <!-- Recent searches -->
+      <div class="px-[18px] pt-4" id="search-history-section">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-[13px] font-bold text-white/80">Recent searches</span>
+          <button class="text-[11px] font-medium text-white/40 transition-colors active:text-white/70" onclick="clearSearchHistory()">Clear all</button>
+        </div>
+        <div class="flex flex-col gap-1" id="search-history-list"></div>
+      </div>
+
+      <!-- You might want to search -->
+      <div class="px-[18px] pt-6 pb-6">
+        <div class="mb-2.5 text-[13px] font-bold text-white/80">You might want to search</div>
+        <div class="flex flex-wrap gap-2" id="search-suggestions"></div>
+      </div>
+    </div>
+
+    <!-- Results state: category chips + grid (shown when typing) -->
+    <div class="flex-1 overflow-y-auto no-scrollbar hidden" id="search-results-container">
+      <div class="flex flex-nowrap gap-1 px-[18px] py-2.5 shrink-0 overflow-x-auto no-scrollbar" id="search-cats"></div>
+      <div class="px-[18px]">
+        <div class="font-heading text-sm font-bold tracking-tight mb-2.5 flex items-center justify-between">
+          <span id="search-grid-title" class="text-white">Popular Templates</span>
+          <span class="text-[10px] font-medium text-white/40" id="search-count">8 templates</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 pb-6" id="search-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PHOTO SOURCE ACTION SHEET ══ -->
+  <div class="photo-source-overlay absolute inset-0 z-[220] bg-black/60 backdrop-blur" id="photo-source-overlay" aria-hidden="true" onclick="if(event.target===this)closePhotoSource()">
+    <div class="photo-source-sheet absolute left-0 right-0 bottom-0 rounded-t-3xl bg-bg border-t border-white/10 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <div class="pt-3 pb-1 flex flex-col items-center gap-2">
+        <div class="w-10 h-1 rounded-full bg-white/20"></div>
+        <h2 class="font-heading text-sm font-bold tracking-tight text-white">Add a photo</h2>
+      </div>
+      <div class="px-4 pt-4 pb-1">
+        <div class="grid grid-cols-2 gap-2.5">
+          <button class="flex flex-col items-center gap-2 py-4 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="choosePhotoSource('camera')">
+            <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-white/10 text-white/80 border border-white/15">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            </span>
+            <div class="text-center">
+              <div class="text-[13px] font-semibold text-white">Take photo</div>
+              <div class="text-[9px] text-white/45">Use camera</div>
+            </div>
+          </button>
+          <button class="flex flex-col items-center gap-2 py-4 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="choosePhotoSource('album')">
+            <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0 bg-white/10 text-white/80 border border-white/15">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            </span>
+            <div class="text-center">
+              <div class="text-[13px] font-semibold text-white">Choose from album</div>
+              <div class="text-[9px] text-white/45">Pick from gallery</div>
+            </div>
+          </button>
+        </div>
+        <button class="mt-2.5 w-full py-3 rounded-xl text-[12px] text-white/45 transition-colors active:bg-white/5" onclick="closePhotoSource()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SHARE SHEET — social media options ══ -->
+  <div class="share-overlay absolute inset-0 z-[230] bg-black/60 backdrop-blur" id="share-overlay" aria-hidden="true" onclick="if(event.target===this)closeShareSheet()">
+    <div class="share-sheet absolute left-0 right-0 bottom-0 rounded-t-3xl bg-bg border-t border-white/10 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <div class="pt-3 pb-1 flex flex-col items-center gap-2">
+        <div class="w-10 h-1 rounded-full bg-white/20"></div>
+        <h2 class="font-heading text-sm font-bold tracking-tight text-white">Share to</h2>
+      </div>
+      <div class="p-4">
+        <div class="grid grid-cols-4 gap-2">
+          <button class="flex flex-col items-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="shareToPlatform('tiktok')">
+            <span class="w-11 h-11 rounded-full grid place-items-center shrink-0" style="background:linear-gradient(135deg,#25F4EE,#FE2C55);color:#fff">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.84 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+            </span>
+            <span class="text-[11px] font-medium text-white/75">TikTok</span>
+          </button>
+          <button class="flex flex-col items-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="shareToPlatform('instagram')">
+            <span class="w-11 h-11 rounded-full grid place-items-center shrink-0" style="background:linear-gradient(135deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888);color:#fff">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>
+            </span>
+            <span class="text-[11px] font-medium text-white/75">Reels</span>
+          </button>
+          <button class="flex flex-col items-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="shareToPlatform('telegram')">
+            <span class="w-11 h-11 rounded-full grid place-items-center shrink-0" style="background:#229ED9;color:#fff">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 4.8 18.6 19c-.2.8-.7 1-1.4.7l-3.8-2.8-1.8 1.8c-.2.2-.4.4-.8.4l.3-4.2 7.7-7c.3-.3-.1-.4-.4-.2l-9.5 6-4.1-1.3c-.9-.3-.9-.9.2-1.3L20 4.2c.9-.3 1.6.2 1.7.6Z"/></svg>
+            </span>
+            <span class="text-[11px] font-medium text-white/75">Telegram</span>
+          </button>
+          <button class="flex flex-col items-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="shareToPlatform('whatsapp')">
+            <span class="w-11 h-11 rounded-full grid place-items-center shrink-0" style="background:#25D366;color:#fff">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 3.6A11.8 11.8 0 0 0 12 0 11.9 11.9 0 0 0 1.7 17.8L0 24l6.4-1.7A11.9 11.9 0 0 0 12 23.7h.1A11.8 11.8 0 0 0 24 11.9c0-3.2-1.3-6.1-3.6-8.3ZM12.1 21.7A9.8 9.8 0 0 1 7 20.3l-.4-.2-3.8 1 1-3.7-.3-.4A9.9 9.9 0 1 1 12 21.7Zm5.4-7.4c-.3-.2-1.8-.9-2-.9-.3-.1-.5-.2-.7.1l-.9 1c-.2.2-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6.3-.5c.1-.2 0-.4 0-.5l-.9-2.1c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.2.3-1 1-1 2.5s1.1 2.9 1.3 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.2-.6-.4Z"/></svg>
+            </span>
+            <span class="text-[11px] font-medium text-white/75">WhatsApp</span>
+          </button>
+        </div>
+        <button class="mt-2.5 w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="shareCopyLink()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white/60"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span class="flex-1 text-left text-[13px] font-medium text-white/80">Copy link</span>
+          <span class="text-[11px] text-white/40">farivideo.app</span>
+        </button>
+        <button class="mt-1.5 w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 transition-colors active:bg-white/10" onclick="shareNative()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white/60"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+          <span class="flex-1 text-left text-[13px] font-medium text-white/80">More</span>
+        </button>
+        <button class="mt-2.5 w-full py-3 rounded-xl text-[12px] text-white/45 transition-colors active:bg-white/5" onclick="closeShareSheet()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CREATE OVERLAY — template preview + upload layout ══ -->
+  <div class="create-overlay absolute inset-0 z-[200] bg-black/60 backdrop-blur" id="create-overlay">
+    <div class="create-sheet absolute left-0 right-0 bottom-0 top-0 bg-bg flex flex-col overflow-hidden">
+      <div class="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-[18px] pt-2 pb-3 bg-gradient-to-b from-black/65 to-transparent">
+        <div class="flex items-center gap-2">
+          <button class="preview-only hidden w-8 h-8 rounded-full backdrop-blur-md bg-black/35 border border-white/20 grid place-items-center text-white/80" id="preview-back" onclick="backToEdit()" aria-label="Back to edit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          </button>
+          <button class="edit-only w-8 h-8 rounded-full backdrop-blur-md bg-black/35 border border-white/20 grid place-items-center text-white/80" onclick="confirmQuitCreate()" aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <h2 class="font-heading text-lg font-bold tracking-tight text-white drop-shadow" id="create-title">Criar vídeo</h2>
+        <div class="flex items-center gap-1.5">
+          <button class="w-8 h-8 rounded-full backdrop-blur-md bg-black/35 border border-white/20 grid place-items-center text-white/80 transition-colors" id="create-like-btn" onclick="toggleLike(createTpl,this)" aria-label="Like">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.87a2 2 0 0 1 1.97 2.54l-2.56 9A2 2 0 0 1 17.31 23H7V10l4.36-7.36a2 2 0 0 1 3.64 3.24Z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="relative flex-1 min-h-0 overflow-hidden">
+        <!-- Full template video with image slots overlaid like AI Catch -->
+        <div class="template-video absolute inset-0 overflow-hidden" id="tpl-preview">
+          <video class="w-full h-full" id="tpl-preview-video" autoplay muted loop playsinline preload="auto"></video>
+          <img class="hidden w-full h-full object-cover" src="" alt="" id="tpl-preview-img">
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(7,9,13,.88)]"></div>
+          <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(circle at 50% 0%,rgba(255,52,126,.12),transparent 60%)"></div>
+          <div class="preview-only hidden absolute top-[62px] right-4">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-semibold uppercase tracking-wider text-white bg-white/15 border border-white/20 backdrop-blur">Preview ready</span>
+          </div>
+        </div>
+      </div>
+      <div class="absolute left-4 right-4 bottom-4 z-20">
+        <div class="edit-only grid grid-cols-3 gap-2" id="upload-slots"></div>
+        <div class="edit-only mt-1 text-center text-[10px] font-medium text-white/40"><span id="slot-count">0 / 3</span> photos</div>
+        <button class="shimmer w-full mt-2 py-3.5 rounded-2xl bg-gradient-to-r from-pink to-pink-bright text-white text-[15px] font-semibold tracking-tight transition-transform active:scale-[.98] disabled:bg-white/[0.1] disabled:text-white/35 disabled:cursor-not-allowed" id="preview-btn" disabled onclick="generatePreview()">Generate preview</button>
+        <button class="hidden w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink to-pink-bright text-white text-[15px] font-semibold tracking-tight transition-transform active:scale-[.98]" id="create-btn" onclick="generateVideo()">Generate video</button>
+        <div class="mt-1.5 text-center text-[11px] text-white/40 font-medium" id="create-credit-info">1 credit per video · Balance: 0 cr</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ QUIT CONFIRM — bottom sheet ══ -->
+  <div class="quit-overlay absolute inset-0 z-[210] bg-black/60 backdrop-blur-sm" id="quit-overlay" aria-hidden="true" onclick="if(event.target===this)closeQuitConfirm()">
+    <div class="quit-sheet absolute left-0 right-0 bottom-0 rounded-t-3xl bg-surface border-t border-white/10 p-5 pb-[max(20px,env(safe-area-inset-bottom))] text-center">
+      <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4"></div>
+      <div class="mx-auto w-12 h-12 rounded-full bg-white/10 border border-white/15 grid place-items-center text-white/60">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <h3 class="mt-3.5 font-heading text-[19px] font-bold text-white">Quit editing?</h3>
+      <p class="mt-1.5 text-[12px] leading-relaxed text-white/55">Your photos and preview will be lost.</p>
+      <button class="mt-4 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white bg-gradient-to-r from-pink to-pink-bright transition-transform active:scale-[.98]" onclick="closeQuitConfirm()">Keep editing</button>
+      <button class="mt-2.5 w-full py-2.5 text-[13px] font-semibold text-white/40 transition-colors" onclick="doQuitCreate()">Quit</button>
+    </div>
+  </div>
+
+  <!-- ══ PAYWALL — overlay on top of video screen ══ -->
+  <div class="paywall-overlay absolute inset-0 z-[300]" id="paywall-overlay" aria-hidden="true">
+    <div class="paywall-shell absolute inset-0 flex flex-col overflow-hidden">
+      <video class="paywall-bg-video" src="assets/template-videos/20-boss-lady.mp4" poster="assets/template-videos/previews/20-boss-lady.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
+      <div class="paywall-vignette"></div>
+      <div class="paywall-topbar">
+        <button class="paywall-close" id="paywall-top-close" aria-label="Close">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="w-9 h-9"></div>
+      </div>
+
+      <!-- ── Offer screen ── -->
+      <div class="paywall-screen active relative flex-1 flex-col justify-end pointer-events-auto" id="paywall-offer">
+        <div class="paywall-offer-content">
+          <div class="paywall-copy-block">
+            <h2 class="paywall-brand-title">AI Catch Pro</h2>
+            <div class="paywall-benefits">
+              <div class="paywall-benefit">No watermark, no ads</div>
+              <div class="paywall-benefit">The best image quality</div>
+              <div class="paywall-benefit">Realtime update trendy effects</div>
+              <div class="paywall-benefit">1500+ AI video &amp; photo templates</div>
+            </div>
+          </div>
+
+          <div class="paywall-plan-stack">
+            <button class="paywall-plan featured transition-transform active:scale-[.985]" onclick="switchPaywallPack(paywallPackIdx)">
+              <span class="paywall-save-pill" id="pw-offer-save">SAVE 82%</span>
+              <div id="pw-offer-chart"></div>
+            </button>
+            <button class="paywall-plan transition-transform active:scale-[.985]" onclick="switchPaywallPack(2)">
+              <div class="paywall-plan-inner">
+                <div>
+              <div class="paywall-plan-name">1000 Credits</div>
+              <div class="paywall-plan-note">&nbsp;</div>
+                </div>
+                <div class="paywall-plan-price">US$ 9.99<span>per week</span></div>
+              </div>
+            </button>
+          </div>
+
+          <div class="paywall-pack-dots" id="pw-pack-selector"></div>
+          <div class="paywall-fineprint">Cancel anytime, total US$ 39.99 per year</div>
+          <div class="paywall-legal-row">
+            <a href="terms.html">Subscription Policy</a><span>|</span><a href="terms.html">Terms of Use</a><span>|</span><a href="privacy.html">Privacy Policy</a><span>|</span><a href="refund.html">Restore</a>
+          </div>
+
+          <button class="paywall-cta-tall w-full rounded-[30px] py-5 px-4 text-center text-[20px] font-black transition-transform" id="paywall-continue">
+            <span id="pw-offer-cta-credits">Continue</span>
+            <span class="sr-only" id="pw-offer-cta-price">$9.90 · Save 82%</span>
+          </button>
+          <span class="sr-only" id="pw-offer-credits">100 credits</span>
+        </div>
+      </div>
+
+      <!-- ── Save / retention screen ── -->
+      <div class="paywall-screen relative flex-1 flex-col justify-end pointer-events-auto" id="paywall-save">
+        <div class="paywall-save-copy">
+          <h2 class="paywall-brand-title">AI Catch Pro</h2>
+          <div class="paywall-benefits">
+            <div class="paywall-benefit">No watermark, no ads</div>
+            <div class="paywall-benefit">The best image quality</div>
+          </div>
+        </div>
+        <div class="paywall-save-panel">
+          <div class="paywall-save-handle"></div>
+          <h2 class="font-heading text-[34px] leading-none font-black text-white drop-shadow">Not sure yet?</h2>
+          <p class="mt-3 text-[15px] leading-tight font-black text-white drop-shadow">Try 7 days with special 50% OFF promo:</p>
+          <div class="sr-only" id="pw-save-credits">100 credits</div>
+          <div class="mt-1 inline-flex items-center gap-2 rounded-full bg-black/18 px-3 py-1 countdown-pill">
+            <span class="text-[12px] font-bold text-white/85 tabular-nums" id="paywall-countdown">05:00</span>
+          </div>
+          <div id="pw-save-chart"></div>
+          <button class="paywall-cta w-full rounded-2xl py-4 text-[17px] font-black transition-transform" id="paywall-save-continue"><span id="pw-save-cta">Continue with 50% OFF</span></button>
+          <button class="mt-2.5 w-full rounded-2xl py-2 text-[13px] font-bold text-white/70 hover:text-white transition-colors" id="paywall-decline">No thanks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CREDITS DETAIL — balance + recharge entry ══ -->
+  <div class="credits-detail-overlay absolute inset-0 z-[340] bg-black/60 backdrop-blur" id="credits-detail-overlay" aria-hidden="true" onclick="if(event.target===this)closeCreditsDetail()">
+    <div class="credits-detail-sheet absolute left-0 right-0 bottom-0 top-0 bg-bg flex flex-col overflow-hidden">
+      <!-- Header -->
+      <div class="relative shrink-0 flex items-center justify-between px-5 pt-3.5 pb-3 border-b border-white/8">
+        <button class="w-9 h-9 rounded-full grid place-items-center bg-white/5 border border-white/10 text-white/60 shrink-0" onclick="closeCreditsDetail()" aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <h2 class="font-heading text-base font-bold tracking-tight text-white">Credits</h2>
+        <div class="w-9 h-9 shrink-0"></div>
+      </div>
+
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-5 pt-6 pb-6">
+        <!-- Balance card -->
+        <div class="relative rounded-3xl overflow-hidden border border-white/10 mb-6">
+          <div class="absolute inset-0 bg-white/[.03]"></div>
+          <div class="relative flex items-center gap-4 p-5">
+            <div class="w-14 h-14 rounded-2xl grid place-items-center shrink-0 bg-white/10 border border-white/15 text-white/80">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div>
+              <div class="text-[11px] text-white/50 font-medium uppercase tracking-wider">Available credits</div>
+              <div class="text-[40px] leading-none font-black font-heading tracking-tight" style="background:linear-gradient(135deg,#fff 0%,#ff347e 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent" id="cd-balance">0</div>
+              <div class="text-[11px] text-white/40 mt-1">1 credit = 1 video generation</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Buy credits section -->
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[13px] font-bold text-white">Buy credits</span>
+          <span class="text-[10px] text-white/35">One-time · No subscription</span>
+        </div>
+        <div class="flex flex-col gap-2.5" id="cd-packs"></div>
+
+        <!-- Info -->
+        <div class="mt-6 rounded-2xl bg-white/[.03] border border-white/8 p-4">
+          <div class="text-[11px] font-bold text-white/70 mb-2">How credits work</div>
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2 text-[11px] text-white/45 leading-relaxed">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Each AI video generation costs 1 credit</span>
+            </div>
+            <div class="flex items-start gap-2 text-[11px] text-white/45 leading-relaxed">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Credits are valid for 12 months from purchase</span>
+            </div>
+            <div class="flex items-start gap-2 text-[11px] text-white/45 leading-relaxed">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>No watermark on paid video exports</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CREDIT PACK PURCHASE — full-screen with template background ══ -->
+  <div class="paywall-overlay absolute inset-0 z-[350]" id="credit-overlay" aria-hidden="true">
+    <div class="paywall-shell absolute inset-0 flex flex-col overflow-hidden">
+      <!-- Template background image -->
+      <div class="absolute inset-0">
+        <img class="w-full h-full object-cover" id="cp-bg-img" src="" alt="" style="opacity:.38">
+        <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(7,9,13,.35) 0%,rgba(7,9,13,.55) 28%,rgba(7,9,13,.85) 50%,rgba(7,9,13,.96) 70%,#07090d 90%)"></div>
+      </div>
+
+      <!-- Top bar — close button -->
+      <div class="relative shrink-0 flex items-center justify-end px-5 pt-3.5 pb-2 z-10">
+        <button class="paywall-close w-9 h-9 rounded-full grid place-items-center text-white/80" onclick="tryCloseCreditPack()" aria-label="Close">
+          <span class="text-lg leading-none">×</span>
+        </button>
+      </div>
+
+      <!-- ══ Screen 1: Offer ══ -->
+      <div class="cp-screen active relative flex-1 flex-col justify-end gap-2 px-5 pb-2 pointer-events-auto" id="cp-offer">
+        <div class="text-center">
+          <div class="text-[12px] uppercase tracking-[.14em] text-white/50 font-bold" id="cp-badge">Credit pack</div>
+          <h2 class="font-heading text-[28px] leading-tight font-bold mt-1" id="cp-title"><span class="gradient-text">100 credits</span></h2>
+          <p class="mt-1 text-[13px] leading-relaxed text-white/55" id="cp-sub">Generate up to 5 AI videos.</p>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/[.06] p-3">
+          <div class="flex items-center justify-between text-[15px] text-white/70 mb-1.5">
+            <span id="cp-pack-label">100 credits</span>
+            <span class="text-pink-bright font-bold" id="cp-sale">SAVE 82%</span>
+          </div>
+          <div class="w-full" id="cp-chart"></div>
+          <div class="mt-1.5 text-center text-[13px] text-white/55 font-medium">Valid 12 months · No subscription</div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl bg-white/[.05] border border-white/10 px-2 py-2 flex flex-col items-center gap-1">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93L19.07 19.07"/></svg>
+            <span class="text-[11px] leading-tight text-white/65 font-medium">No watermark</span>
+          </div>
+          <div class="rounded-xl bg-white/[.05] border border-white/10 px-2 py-2 flex flex-col items-center gap-1">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5z"/></svg>
+            <span class="text-[11px] leading-tight text-white/65 font-medium">Best quality</span>
+          </div>
+          <div class="rounded-xl bg-white/[.05] border border-white/10 px-2 py-2 flex flex-col items-center gap-1">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M13 2L3 14h9l-1 8L21 10h-9z"/></svg>
+            <span class="text-[11px] leading-tight text-white/65 font-medium">Trendy effects</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[12px] text-white/40 px-1">
+          <span id="cp-per-credit">$0.099 per credit</span>
+          <span id="cp-you-save">You save $30.09</span>
+        </div>
+
+        <button class="paywall-continue w-full rounded-2xl py-3.5 text-[17px] font-black transition-transform" id="cp-continue-btn" onclick="showApplePay('credit')">Continue</button>
+      </div>
+
+      <!-- ══ Screen 2: Processing ══ -->
+      <div class="cp-screen relative flex-1 flex-col items-center justify-center px-5" id="cp-processing">
+        <div class="text-center">
+          <div class="text-[12px] uppercase tracking-[.14em] text-white/50 font-bold">Payment complete</div>
+          <h2 class="font-heading text-[26px] leading-tight font-bold mt-2">Adding your credits…</h2>
+        </div>
+        <div class="mt-8">
+          <div class="motion-mark" aria-hidden="true">
+            <span class="motion-star"></span>
+            <span class="motion-orbit"></span>
+            <i class="motion-spark a"></i>
+            <i class="motion-spark b"></i>
+            <i class="motion-spark c"></i>
+          </div>
+        </div>
+        <div class="mt-8 text-center text-[14px] text-white/55" id="cp-processing-text">Adding 100 credits to your account</div>
+      </div>
+
+      <!-- ══ Screen 3: Retention ══ -->
+      <div class="cp-screen relative flex-1 flex-col justify-end gap-2 px-5 pb-2 pointer-events-auto" id="cp-retention">
+        <div class="text-center">
+          <div class="text-[15px] uppercase tracking-[.14em] text-white/50 font-bold">Wait — don't go!</div>
+          <h2 class="mt-1.5 font-heading text-[28px] leading-[1.05] font-bold">Get <span class="text-pink-bright">bonus credits</span><br>with this pack.</h2>
+          <p class="mt-1.5 text-[14px] leading-relaxed text-white/55">This offer expires soon. Unlock your credits at the best price today.</p>
+        </div>
+
+        <div class="rounded-2xl border border-pink/25 bg-pink/[.06] border-pink/15 p-3.5">
+          <div class="flex items-center justify-between text-[15px] text-white/70 mb-1.5">
+            <span id="cp-retention-label">100 credits</span>
+            <span class="text-pink-bright font-bold" id="cp-retention-sale">SAVE 82%</span>
+          </div>
+          <div class="flex items-baseline justify-center gap-2">
+            <span class="text-[14px] text-white/35 line-through" id="cp-retention-original">$39.99</span>
+            <span class="text-[32px] font-black font-heading text-white" id="cp-retention-price">$9.90</span>
+          </div>
+          <div class="mt-1 text-center text-[13px] text-white/55 font-medium">Valid 12 months · No subscription</div>
+        </div>
+
+        <div>
+          <button class="paywall-continue w-full rounded-2xl py-3.5 text-[16px] font-black transition-transform" onclick="showApplePay('credit')">Continue</button>
+          <button class="mt-2 w-full rounded-2xl py-2 text-[13px] text-white/45 hover:text-white/70 transition-colors" onclick="forceCloseCreditPack()">No thanks</button>
+        </div>
+      </div>
+
+      <!-- Legal footer -->
+      <div class="relative shrink-0 px-5 pt-3 pb-3 text-center text-[11px] leading-relaxed text-white/45 pointer-events-auto">
+        By continuing you agree to our <a href="terms.html" class="text-white/70 underline underline-offset-2">Terms of Service</a>, <a href="privacy.html" class="text-white/70 underline underline-offset-2">Privacy Policy</a> &amp; <a href="refund.html" class="text-white/70 underline underline-offset-2">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ APPLE PAY — native iOS payment confirmation sheet ══ -->
+  <div class="apple-pay-overlay absolute inset-0 z-[380]" id="apple-pay-overlay" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" onclick="closeApplePay()"></div>
+    <div class="apple-pay-sheet absolute left-0 right-0 bottom-0 mx-auto w-full max-w-[360px] rounded-t-[28px] overflow-hidden" style="background:#1c1c1e;border:1px solid rgba(255,255,255,.08);border-bottom:none">
+      <div class="pt-2.5 pb-1 flex justify-center"><div class="w-9 h-1 rounded-full bg-white/15"></div></div>
+      <div class="flex flex-col items-center pt-3 pb-4">
+        <div class="w-[52px] h-[52px] rounded-[13px] grid place-items-center shrink-0" style="background:linear-gradient(135deg,#ff347e,#ff6d9b)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <div class="text-[15px] font-semibold text-white mt-2">Fari</div>
+      </div>
+      <div class="mx-5 px-4 py-3 rounded-xl" style="background:rgba(255,255,255,.04)">
+        <div class="flex items-center justify-between text-[15px]">
+          <span class="text-white/60" id="ap-desc">100 Credits</span>
+          <span class="text-white font-semibold" id="ap-price">$9.90</span>
+        </div>
+      </div>
+      <div class="px-5 pt-2.5 pb-1 text-center">
+        <p class="text-[11px] text-white/35 leading-relaxed">One-time purchase · Valid 12 months<br>No subscription</p>
+      </div>
+      <div class="px-4 pt-3 pb-4">
+        <button class="w-full rounded-2xl py-3.5 text-[16px] font-bold text-white flex items-center justify-center gap-2 transition-all active:scale-[.98]" style="background:linear-gradient(135deg,#ff347e,#ff6d9b)" id="ap-pay-btn" onclick="confirmApplePay()">
+          <span id="ap-pay-label">Pay $9.90</span>
+        </button>
+        <button class="mt-2.5 w-full text-[14px] text-white/50 py-2.5 transition-colors" onclick="closeApplePay()">Cancel</button>
+      </div>
+      <div class="px-5 pb-3.5 pt-3 text-center" style="border-top:1px solid rgba(255,255,255,.06)">
+        <p class="text-[10px] text-white/25 leading-relaxed">By tapping Pay, you agree to Apple's Terms &amp; acknowledge Apple's subscription terms.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RESULT FLOW — paid generation + final video share ══ -->
+  <div class="result-overlay absolute inset-0 z-[400] overflow-hidden bg-bg" id="result-overlay" aria-hidden="true">
+    <div class="result-screen active absolute inset-0 flex-col px-5 pt-5 pb-6" id="result-loading">
+      <div class="flex items-center justify-between shrink-0">
+        <div>
+          <div class="text-[10px] uppercase tracking-[.16em] text-white/50 font-bold">Payment complete</div>
+          <h2 class="font-heading text-[24px] leading-tight font-bold mt-1">Generating your final video</h2>
+        </div>
+      </div>
+      <div class="relative mt-8 flex-1 min-h-0 rounded-[28px] overflow-hidden border border-white/10 bg-white/[.03]">
+        <video class="absolute inset-0 w-full h-full object-cover opacity-50" id="result-loading-video" muted loop playsinline></video>
+        <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/45 to-transparent"></div>
+        <div class="absolute inset-0 grid place-items-center">
+          <div class="motion-mark" aria-hidden="true">
+            <span class="motion-star"></span>
+            <span class="motion-orbit"></span>
+            <i class="motion-spark a"></i>
+            <i class="motion-spark b"></i>
+            <i class="motion-spark c"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-screen absolute inset-0 flex-col overflow-hidden" id="result-ready">
+      <div class="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-[18px] pt-3 pb-4 bg-gradient-to-b from-black/65 to-transparent">
+        <div>
+          <div class="text-[9px] uppercase tracking-[.16em] text-white/50 font-bold">Final video ready</div>
+          <h2 class="font-heading text-lg font-bold tracking-tight text-white drop-shadow" id="result-title">Your video</h2>
+        </div>
+        <button class="w-8 h-8 rounded-full backdrop-blur-md bg-black/35 border border-white/20 grid place-items-center text-white/80" onclick="closeResult()" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+      </div>
+      <div class="relative flex-1 min-h-0">
+        <video class="absolute inset-0 w-full h-full object-cover" id="result-video" autoplay muted loop playsinline controls></video>
+        <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/35 via-transparent to-bg"></div>
+        <div class="center-toast absolute inset-0 z-30 flex items-center justify-center" id="center-toast">
+          <!-- Progress state -->
+          <div class="center-progress rounded-3xl border border-white/15 bg-black/75 backdrop-blur-2xl px-7 py-7 text-center shadow-2xl shadow-black/50">
+            <div class="w-14 h-14 mx-auto rounded-full bg-white/10 border border-white/15 grid place-items-center mb-3">
+              <div class="photo-spinner" style="width:26px;height:26px;border-width:2.5px"></div>
+            </div>
+            <div class="text-[15px] font-bold text-white">Downloading video…</div>
+            <div class="mt-1 text-[11px] text-white/55">Share text copied to clipboard</div>
+            <div class="mt-3.5 w-44 mx-auto h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div class="center-progress-bar h-full rounded-full bg-gradient-to-r from-pink to-pink-bright" style="width:0%;transition:width .2s linear"></div>
+            </div>
+            <div class="mt-1.5 text-[10px] text-white/40 center-progress-pct">0%</div>
+          </div>
+          <!-- Success state -->
+          <div class="center-success hidden rounded-3xl border border-white/15 bg-black/75 backdrop-blur-2xl px-7 py-6 text-center shadow-2xl shadow-black/50">
+            <div class="w-14 h-14 mx-auto rounded-full bg-white/10 border border-white/15 grid place-items-center mb-3">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div class="text-[15px] font-bold text-white">Text copied & video downloaded</div>
+            <div class="mt-1 text-[11px] text-white/55">Ready to share anywhere</div>
+          </div>
+        </div>
+      </div>
+      <div class="absolute left-4 right-4 bottom-4 z-20">
+        <div class="share-toast mb-2 rounded-xl border border-white/15 bg-white/[.08] px-3 py-2 text-center text-[11px] text-white/80" id="share-toast">Share text copied</div>
+        <button class="paywall-continue w-full rounded-2xl py-4 text-[16px] font-black transition-transform" onclick="shareFinalVideo()">Download & Share</button>
+        <button class="mt-2 w-full rounded-2xl py-3 text-[12px] font-semibold bg-white/[.08] border border-white/10 text-white/75" onclick="downloadFinalVideo()">Download</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TEMPLATES=[
+  {id:"birthday",name:"Birthday",cat:"single",poster:"assets/template-gallery/fari-thumb-Feliz-aniversario.png",video:"assets/template-videos/12-poolside-birthday.mp4",slots:3,hot:12000},
+  {id:"mothers-day",name:"Mother's Day",cat:"family",poster:"assets/template-gallery/fari-thumb-Dia-das-Maes.png",video:"assets/template-videos/21-timeless-beauty.mp4",slots:3,hot:9500},
+  {id:"fathers-day",name:"Father's Day",cat:"family",poster:"assets/template-gallery/fari-thumb-Dia-dos-Pais.png",video:"assets/template-videos/05-brazil-together.mp4",slots:3,hot:4200},
+  {id:"june-festival",name:"June Festival",cat:"family",poster:"assets/template-gallery/fari-thumb-Festa-Junina.png",video:"assets/video-template-previews/gradient-feature-story.mp4",slots:3,hot:380},
+  {id:"graduation",name:"Graduation",cat:"single",poster:"assets/template-gallery/fari-thumb-Formatura.png",video:"assets/video-template-previews/timeline-evolution.mp4",slots:3,hot:3800},
+  {id:"wedding",name:"Wedding / Engagement",cat:"couple",poster:"assets/template-gallery/fari-thumb-Casamento-Noivado.png",video:"assets/template-videos/19-rhythm-duo.mp4",slots:3,hot:8700},
+  {id:"gender-reveal",name:"Gender Reveal",cat:"couple",poster:"assets/template-gallery/fari-thumb-Cha-revelacao.png",video:"assets/template-videos/23-baby-dance.mp4",slots:3,hot:520},
+  {id:"pet-family",name:"Pet Family",cat:"pet",poster:"assets/template-gallery/fari-thumb-Pet-familia.png",video:"assets/template-videos/17-paws-kitchen-diaries.mp4",slots:3,hot:2900},
+];
+const HISTORY=[
+  {name:"Birthday",photo:"family photo",status:"generating",date:"Today, 14:50",poster:"assets/template-gallery/fari-thumb-Feliz-aniversario.png"},
+  {name:"Wedding / Engagement",photo:"couple photo",status:"done",date:"Today, 11:08",poster:"assets/template-gallery/fari-thumb-Casamento-Noivado.png"},
+  {name:"Graduation",photo:"portrait",status:"done",date:"Yesterday, 19:45",poster:"assets/template-gallery/fari-thumb-Formatura.png"},
+  {name:"Mother's Day",photo:"family photo",status:"done",date:"Yesterday, 16:20",poster:"assets/template-gallery/fari-thumb-Dia-das-Maes.png"},
+  {name:"Gender Reveal",photo:"couple photo",status:"failed",date:"Yesterday, 10:15",poster:"assets/template-gallery/fari-thumb-Cha-revelacao.png"},
+  {name:"Pet Family",photo:"pet photo",status:"done",date:"Sep 15, 22:10",poster:"assets/template-gallery/fari-thumb-Pet-familia.png"},
+];
+const CREDIT_PACKS=[
+  {name:"Explore",credits:100,original:39.99,price:9.90,sale:82,badge:"",videos:"5 videos",perCredit:"$0.099",color:"#ff347e",color2:"#ff6d9b"},
+  {name:"Explore Plus",credits:300,original:99.90,price:24.90,sale:75,badge:"POPULAR",videos:"15 videos",perCredit:"$0.083",color:"#ff6d9b",color2:"#ff8ab5"},
+  {name:"Explore Pro",credits:1000,original:299.90,price:69.90,sale:77,badge:"BEST VALUE",videos:"50+ videos",perCredit:"$0.070",color:"#ff8ab5",color2:"#ffb627"},
+  {name:"Explore Ultra",credits:5000,original:499.90,price:129.90,sale:74,badge:"",videos:"250+ videos",perCredit:"$0.026",color:"#ffb627",color2:"#ff347e"},
+];
+const CAT_LABELS={all:"Popular Templates",single:"Solo",family:"Family",couple:"Couple",pet:"Pets"};
+const SEARCH_SUGGESTIONS=["Birthday","Mother's Day","Wedding","Graduation","Pet Family","Gender Reveal","June Festival","Father's Day"];
+let searchHistory=["Birthday","Wedding","Pet Family"];
+let currentSearchQuery="";
+const CATEGORIES=[
+  {id:"single",label:"Solo",icon:"user-circle",color:"#fb923c"},
+  {id:"family",label:"Family",icon:"users",color:"#ff6d9b"},
+  {id:"couple",label:"Couple",icon:"heart",color:"#f472b6"},
+  {id:"pet",label:"Pets",icon:"paw-print",color:"#fbbf24"},
+];
+
+function renderPhosphor(scope=document){
+  scope.querySelectorAll('[data-ph]').forEach(el=>{
+    const name=el.dataset.ph;
+    const color=getComputedStyle(el).color || 'currentColor';
+    el.innerHTML=ph(name,color);
+  });
+}
+
+function renderCats(){
+  document.getElementById("cats").innerHTML=CATEGORIES.map(c=>`
+    <button class="cat-chip${c.id==='all'?' active':''} shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-full border transition-all" data-cat="${c.id}" onclick="selectCat('${c.id}',false)">
+      <span class="w-[18px] h-[18px] grid place-items-center" style="color:${c.color}">${ph(c.icon,c.color)}</span>
+      <span class="text-[12px] font-semibold">${c.label}</span>
+    </button>`).join("");
+}
+
+function selectCat(cat,searchCtx){
+  const container=searchCtx?document.getElementById("search-cats"):document.getElementById("cats");
+  const gridId=searchCtx?"search-grid":"tpl-grid";
+  const titleId=searchCtx?"search-grid-title":"grid-title";
+  container.querySelectorAll('.cat-chip').forEach(b=>{
+    const active=b.dataset.cat===cat;
+    b.classList.toggle('active',active);
+    if(active){
+      b.style.background='linear-gradient(90deg,rgba(255,52,126,.18),rgba(255,52,126,.06))';
+      b.style.borderColor='rgba(255,52,126,.35)';
+      b.querySelector('span:last-child').style.color='#fff';
+    }else{
+      b.style.background='rgba(255,255,255,.04)';
+      b.style.borderColor='rgba(255,255,255,.08)';
+      b.querySelector('span:last-child').style.color='rgba(255,255,255,.55)';
+    }
+  });
+  const items=cat==="all"?[...TEMPLATES].sort((a,b)=>b.hot-a.hot):TEMPLATES.filter(t=>t.cat===cat);
+  document.getElementById(titleId).textContent=CAT_LABELS[cat]||"Popular Templates";
+  if(searchCtx)document.getElementById("search-count").textContent=items.length+" templates";
+  document.getElementById(gridId).innerHTML=items.map(t=>`
+    <div class="card-3d relative rounded-xl overflow-hidden border border-white/10 cursor-pointer" style="aspect-ratio:9/16" onclick="openTemplate('${t.id}')">
+      <img class="w-full h-full object-cover" src="${t.poster}" alt="${t.name}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(7,9,13,.88)]"></div>
+      <div class="absolute bottom-1.5 left-1.5 right-1.5 text-[9px] font-medium leading-tight text-white truncate">${t.name}</div>
+    </div>`).join("");
+}
+
+function renderTemplates(cat="all"){
+  const grid=document.getElementById("tpl-grid");
+  const items=cat==="all"?[...TEMPLATES].sort((a,b)=>b.hot-a.hot):TEMPLATES.filter(t=>t.cat===cat);
+  document.getElementById("grid-title").textContent=CAT_LABELS[cat]||"Popular Templates";
+  grid.innerHTML=items.map(t=>`
+    <div class="card-3d relative rounded-xl overflow-hidden border border-white/10 cursor-pointer" style="aspect-ratio:9/16" onclick="openTemplate('${t.id}')">
+      <img class="w-full h-full object-cover" src="${t.poster}" alt="${t.name}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(7,9,13,.88)]"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full backdrop-blur-md bg-white/10 border border-white/10 grid place-items-center opacity-0 transition-opacity">${ph('play','#fff')}</div>
+      <div class="absolute bottom-1.5 left-1.5 right-1.5 text-[9px] font-medium leading-tight text-white truncate">${t.name}</div>
+    </div>`).join("");
+}
+
+function renderHistory(){
+  document.getElementById("history-list").innerHTML=HISTORY.map(h=>{
+    let tag,dotColor,dotAnim="",overlay="";
+    if(h.status==="generating"){
+      tag=`<span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-wider" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.1)"><span class="w-1.5 h-1.5 rounded-full bg-white/60" style="animation:dotPulse 1.2s ease-in-out infinite"></span>Generating</span>`;
+      dotColor="rgba(255,255,255,.6)";
+      dotAnim="animation:dotPulse 1.2s ease-in-out infinite";
+      overlay='<div class="absolute inset-0 grid place-items-center bg-black/45"><div class="photo-spinner" style="width:16px;height:16px;border-width:1.5px"></div></div>';
+    }else if(h.status==="done"){
+      tag=`<span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-wider" style="background:rgba(255,182,39,.08);color:var(--green);border:1px solid rgba(255,182,39,.15)">Generated</span>`;
+      dotColor="var(--green)";
+    }else{
+      tag=`<span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-wider" style="background:rgba(248,113,113,.08);color:#f87171;border:1px solid rgba(248,113,113,.15)">Failed</span>`;
+      dotColor="#f87171";
+    }
+    return `<div class="flex gap-3 py-2.5 border-b border-white/5 last:border-b-0">
+      <div class="w-11 h-14 rounded-lg overflow-hidden bg-surface2 shrink-0 relative border border-white/10">
+        <img class="w-full h-full object-cover" src="${h.poster}" alt="${h.name}">
+        ${overlay}
+        <div class="absolute top-1 right-1 w-[7px] h-[7px] rounded-full" style="background:${dotColor};box-shadow:0 0 6px ${dotColor};${dotAnim}"></div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[12px] font-medium leading-tight truncate">${h.name}</div>
+        <div class="text-[10px] text-white/30 mt-0.5 leading-tight">${h.date} · ${h.photo}</div>
+        ${tag}
+      </div>
+      <span class="text-white/20 shrink-0 self-center">${ph('arrow-right','currentColor')}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderCreditPacks(){
+  document.getElementById("credit-packs").innerHTML=CREDIT_PACKS.map((p,i)=>{
+    const isPopular=p.badge==="POPULAR";
+    const isBest=p.badge==="BEST VALUE";
+    const badgeColor=isPopular?"linear-gradient(90deg,#ff347e,#ff6d9b)":isBest?"linear-gradient(90deg,#ff8ab5,#ffb627)":"linear-gradient(90deg,#ffb627,#ff347e)";
+    const badgeText=p.badge||"";
+    return `<div class="credit-pack-card shrink-0 w-[130px] rounded-2xl border ${isPopular?'border-pink/40':'border-white/10'} p-3 relative overflow-hidden snap-center" onclick="openCreditPackPurchase(${i})" style="background:linear-gradient(160deg,rgba(${isPopular?'255,52,126,.1':'255,255,255,.02'}) 0%,rgba(${isBest?'96,165,250,.08':'255,255,255,.01'}) 100%)">
+      <div class="pack-glow absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl" style="background:radial-gradient(circle,${p.color},transparent 65%);opacity:${isPopular?'.3':'0'}"></div>
+      ${badgeText?`<div class="pack-badge" style="background:${badgeColor};color:#fff">${badgeText}</div>`:''}
+      <div class="relative">
+        <div class="text-[10px] text-white/60 font-bold uppercase tracking-wider">${p.name}</div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span class="text-[30px] font-black font-heading leading-none tracking-tight" style="background:linear-gradient(135deg,#fff 0%,${p.color} 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${p.credits}</span>
+          <span class="text-[10px] text-white/45 font-semibold">cr</span>
+        </div>
+        <div class="text-[9px] text-white/40 font-medium mt-0.5">${p.videos}</div>
+        <div class="mt-2 flex items-baseline gap-1.5">
+          <span class="text-[9px] text-white/30 line-through">$${p.original.toFixed(2)}</span>
+        </div>
+        <div class="text-[18px] font-black text-white leading-tight">$${p.price.toFixed(2)}</div>
+        <div class="mt-1.5 text-[8px] text-white/40">${p.perCredit}/credit</div>
+        <div class="mt-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold" style="background:rgba(${isPopular?'255,52,126':'255,182,39'},.12);color:${isPopular?'#ff347e':'#ffb627'}">${p.sale}% OFF</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function openCreditsDetail(){
+  const overlay=document.getElementById("credits-detail-overlay");
+  const meCredits=document.getElementById("me-credits");
+  const cdBalance=document.getElementById("cd-balance");
+  if(meCredits&&cdBalance)cdBalance.textContent=meCredits.textContent;
+  renderCreditsDetailPacks();
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+function closeCreditsDetail(){
+  const overlay=document.getElementById("credits-detail-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+function renderCreditsDetailPacks(){
+  document.getElementById("cd-packs").innerHTML=CREDIT_PACKS.map((p,i)=>{
+    const isPopular=p.badge==="POPULAR";
+    const isBest=p.badge==="BEST VALUE";
+    const badgeText=p.badge||"";
+    const badgeColor=isPopular?"#ff347e":isBest?"#ff8ab5":"#ffb627";
+    return `<button class="w-full rounded-2xl border ${isPopular?'border-pink/40':'border-white/10'} bg-white/[.04] p-4 flex items-center gap-3 transition-all active:scale-[.98] active:bg-white/[.08]" onclick="openCreditPackPurchase(${i})">
+      <div class="shrink-0 text-center">
+        <div class="flex items-baseline gap-0.5">
+          <span class="text-[24px] font-black font-heading leading-none tracking-tight" style="background:linear-gradient(135deg,#fff 0%,${p.color} 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${p.credits}</span>
+        </div>
+        <div class="text-[8px] text-white/40 font-medium mt-0.5">credits</div>
+      </div>
+      <div class="flex-1 text-left">
+        <div class="text-[14px] font-bold text-white tracking-tight">${p.name}</div>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-[12px] text-white/60 font-medium">${p.videos}</span>
+          ${badgeText?`<span class="px-1.5 py-0.5 rounded-md text-[8px] font-bold" style="background:rgba(${isPopular?'255,52,126':isBest?'96,165,250':'255,182,39'},.12);color:${badgeColor}">${badgeText}</span>`:''}
+        </div>
+        <div class="text-[11px] text-white/45 mt-0.5">${p.perCredit}/credit</div>
+      </div>
+      <div class="text-right shrink-0">
+        <div class="text-[9px] text-white/30 line-through">$${p.original.toFixed(2)}</div>
+        <div class="text-[18px] font-black text-white leading-tight">$${p.price.toFixed(2)}</div>
+        <div class="text-[8px] font-bold mt-0.5" style="color:${badgeColor}">${p.sale}% OFF</div>
+      </div>
+    </button>`;
+  }).join("");
+}
+
+let currentPackIdx=0;
+let userTierIndex=-1;
+let paywallPackIdx=0;
+
+function updateCreateCreditInfo(){
+  const el=document.getElementById("create-credit-info");
+  if(!el)return;
+  const creditsEl=document.getElementById("me-credits");
+  const balance=parseInt(creditsEl?.textContent)||0;
+  el.textContent=`1 credit per video · Balance: ${balance} cr`;
+}
+
+function buildPaywallChart(p,isSave){
+  const finalPrice=isSave?p.price/2:p.price;
+  const perVideo=Math.max(.01,finalPrice/Math.max(1,parseInt(p.videos)||1));
+  if(isSave){
+    return `<div class="paywall-discount-compare">
+      <div class="paywall-discount-price old"><strong>US$ ${p.price.toFixed(2)}</strong><small>/week</small></div>
+      <div class="paywall-discount-arrow">➜</div>
+      <div class="paywall-discount-price new"><strong>US$ ${finalPrice.toFixed(2)}</strong><small>/week</small></div>
+      <div class="paywall-discount-badge">50%OFF + 500CREDITS</div>
+    </div>`;
+  }
+  return `<div class="paywall-plan-inner">
+    <div>
+      <div class="paywall-plan-name">4000 Credits</div>
+      <div class="paywall-plan-note">Up to 200 generation</div>
+    </div>
+    <div class="paywall-plan-price">US$ 0.2<span>per video</span></div>
+  </div>`;
+}
+
+function renderPaywallOffer(idx){
+  paywallPackIdx=idx;
+  const p=CREDIT_PACKS[idx];
+  // Offer screen
+  document.getElementById("pw-offer-credits").textContent=`${p.name} · ${p.credits} credits`;
+  document.getElementById("pw-offer-save").textContent=`SAVE ${p.sale}%`;
+  document.getElementById("pw-offer-chart").innerHTML=buildPaywallChart(p,false);
+  document.getElementById("pw-offer-cta-credits").textContent=`Continue`;
+  document.getElementById("pw-offer-cta-price").textContent=`$${p.price.toFixed(2)} · Save ${p.sale}%`;
+  // Save screen
+  document.getElementById("pw-save-credits").textContent=`${p.name} · ${p.credits} credits`;
+  document.getElementById("pw-save-chart").innerHTML=buildPaywallChart(p,true);
+  document.getElementById("pw-save-cta").textContent=`Continue with 50% OFF`;
+  // Pack selector
+  const sel=document.getElementById("pw-pack-selector");
+  if(sel){
+    sel.innerHTML=CREDIT_PACKS.map((pack,i)=>`
+      <button class="${i===idx?'active':''}" onclick="switchPaywallPack(${i})" aria-label="${pack.name}"></button>
+    `).join("");
+  }
+}
+
+function switchPaywallPack(idx){
+  renderPaywallOffer(idx);
+}
+function openCreditPackPurchase(idx){
+  currentPackIdx=idx;
+  const p=CREDIT_PACKS[idx];
+  document.getElementById("cp-badge").textContent=p.name;
+  document.getElementById("cp-title").innerHTML=`<span class="gradient-text">${p.credits} credits</span>`;
+  document.getElementById("cp-pack-label").textContent=`${p.name} · ${p.credits} credits`;
+  document.getElementById("cp-sale").textContent=`SAVE ${p.sale}%`;
+  document.getElementById("cp-per-credit").textContent=`${p.perCredit} per credit`;
+  document.getElementById("cp-you-save").textContent=`You save $${(p.original-p.price).toFixed(2)}`;
+  document.getElementById("cp-continue-btn").textContent=`Continue · $${p.price.toFixed(2)}`;
+  document.getElementById("cp-sub").textContent=`${p.name} — Generate up to ${p.videos.replace(' videos','')} AI videos.`;
+  document.getElementById("cp-retention-label").textContent=`${p.name} · ${p.credits} credits`;
+  document.getElementById("cp-retention-sale").textContent=`SAVE ${p.sale}%`;
+  document.getElementById("cp-retention-original").textContent=`$${p.original.toFixed(2)}`;
+  document.getElementById("cp-retention-price").textContent=`$${p.price.toFixed(2)}`;
+  document.getElementById("cp-processing-text").textContent=`Adding ${p.credits} credits to your account`;
+  // Template background image — pick a random popular template
+  const pool=TEMPLATES.slice(0,5);
+  const tpl=pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById("cp-bg-img").src=tpl.poster;
+  // Price display — strikethrough original, large current, savings
+  const savings=p.original-p.price;
+  document.getElementById("cp-chart").innerHTML=`
+    <div class="flex items-end justify-between gap-3 px-1">
+      <div class="flex items-baseline gap-2">
+        <span class="text-[36px] font-black font-heading text-white leading-none tracking-tight">$${p.price.toFixed(2)}</span>
+        <span class="text-[14px] text-white/30 line-through font-medium">$${p.original.toFixed(2)}</span>
+      </div>
+      <div class="text-right">
+        <div class="text-[10px] text-white/40 font-medium">You save</div>
+        <div class="text-[16px] font-black text-pink-bright">$${savings.toFixed(2)}</div>
+      </div>
+    </div>`;
+  showCreditScreen("cp-offer");
+  const overlay=document.getElementById("credit-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+
+function showCreditScreen(id){
+  document.querySelectorAll(".cp-screen").forEach(s=>s.classList.toggle("active",s.id===id));
+}
+
+function showCreditProcessing(){
+  showCreditScreen("cp-processing");
+  setTimeout(()=>{ completeCreditPackPurchase(); },2200);
+}
+
+function tryCloseCreditPack(){
+  // If already on retention screen, close; otherwise show retention
+  if(document.getElementById("cp-retention").classList.contains("active")){
+    forceCloseCreditPack();
+  } else {
+    showCreditScreen("cp-retention");
+  }
+}
+
+function forceCloseCreditPack(){
+  const overlay=document.getElementById("credit-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+  showCreditScreen("cp-offer"); // reset for next open
+}
+
+function completeCreditPackPurchase(){
+  const p=CREDIT_PACKS[currentPackIdx];
+  const creditsEl=document.getElementById("me-credits");
+  if(creditsEl){
+    let cur=parseInt(creditsEl.textContent)||0;
+    creditsEl.textContent=cur+p.credits;
+    const cdBalance=document.getElementById("cd-balance");
+    if(cdBalance)cdBalance.textContent=creditsEl.textContent;
+  }
+  userTierIndex=currentPackIdx;
+  updateCreateCreditInfo();
+  forceCloseCreditPack();
+  showMiniToast(`${p.credits} credits added to your account`);
+}
+
+// ══════ Apple Pay — native iOS payment confirmation ══════
+let applePayPending=null;
+function showApplePay(type,offer){
+  const overlay=document.getElementById("apple-pay-overlay");
+  let desc,price;
+  if(type==="credit"){
+    const p=CREDIT_PACKS[currentPackIdx];
+    desc=`${p.credits} Credits`;
+    price=`$${p.price.toFixed(2)}`;
+  }else{
+    const p=CREDIT_PACKS[paywallPackIdx];
+    desc=`${p.credits} Credits`;
+    price=offer==="save-offer"?`$${(p.price/2).toFixed(2)}`:`$${p.price.toFixed(2)}`;
+  }
+  document.getElementById("ap-desc").textContent=desc;
+  document.getElementById("ap-price").textContent=price;
+  document.getElementById("ap-pay-label").textContent=`Pay ${price}`;
+  applePayPending={type,offer};
+  // Reset button to default state
+  const btn=document.getElementById("ap-pay-btn");
+  btn.style.background="linear-gradient(135deg,#ff347e,#ff6d9b)";
+  btn.style.pointerEvents="auto";
+  btn.innerHTML=`<span id="ap-pay-label">Pay ${price}</span>`;
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+function confirmApplePay(){
+  const btn=document.getElementById("ap-pay-btn");
+  btn.style.pointerEvents="none";
+  btn.style.background="#3a3a3c";
+  // Face ID scanning state
+  btn.innerHTML=`<svg class="ap-faceid-scan" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10v2M15 10v2"/><path d="M9.5 15c.8.7 1.8 1 2.5 1s1.7-.3 2.5-1"/></svg><span>Face ID…</span>`;
+  setTimeout(()=>{
+    // Success state
+    btn.style.background="#34c759";
+    btn.innerHTML=`<svg class="ap-success" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg><span>Approved</span>`;
+  },1200);
+  setTimeout(()=>{
+    closeApplePay();
+    if(applePayPending){
+      if(applePayPending.type==="credit"){
+        showCreditProcessing();
+      }else{
+        completePurchase(applePayPending.offer);
+      }
+      applePayPending=null;
+    }
+  },1900);
+}
+function closeApplePay(){
+  const overlay=document.getElementById("apple-pay-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function switchTab(tab){
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.classList.remove("active");
+    const ico=t.querySelector("[data-ph-tab]");
+    if(ico) ico.innerHTML=phTab(ico.dataset.phTab,false);
+  });
+  const at=document.getElementById("tab-"+tab);
+  at.classList.add("active");
+  const aico=at.querySelector("[data-ph-tab]");
+  if(aico) aico.innerHTML=phTab(aico.dataset.phTab,true);
+  const tp=document.getElementById("page-tpl"),mp=document.getElementById("page-me");
+  if(tab==="tpl"){
+    mp.style.display="none";tp.style.display="block";
+    const c=document.getElementById("tpl-content");c.classList.remove("active");void c.offsetWidth;c.classList.add("active");
+  }else{
+    tp.style.display="none";mp.style.display="block";
+    const c=document.getElementById("me-content");c.classList.remove("active");void c.offsetWidth;c.classList.add("active");
+    mp.scrollTop=0;
+  }
+}
+
+function openTemplate(id){
+  const t=TEMPLATES.find(t=>t.id===id);
+  if(!t)return;
+  const searchOpen=document.getElementById("search-overlay").classList.contains("open");
+  if(searchOpen){
+    closeSearchPage();
+    setTimeout(()=>openCreate(id),250);
+  }else{
+    openCreate(id);
+  }
+}
+let createPhotos=[null,null,null],createTpl=null,previewReady=false;
+
+function scrollTplTop(){
+  document.getElementById("page-tpl").scrollTo({top:0,behavior:"smooth"});
+}
+
+let miniToastTimer=null;
+function showMiniToast(msg){
+  let toast=document.getElementById("mini-toast");
+  if(!toast){
+    toast=document.createElement("div");
+    toast.id="mini-toast";
+    toast.className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[500] px-4 py-2.5 rounded-full bg-white/90 text-[12px] font-semibold text-black shadow-lg pointer-events-none";
+    toast.style.transition="opacity .3s ease,transform .3s ease";
+    toast.style.opacity="0";
+    toast.style.transform="translate(-50%,8px)";
+    document.body.appendChild(toast);
+  }
+  toast.textContent=msg;
+  toast.style.opacity="1";
+  toast.style.transform="translate(-50%,0)";
+  if(miniToastTimer)clearTimeout(miniToastTimer);
+  miniToastTimer=setTimeout(()=>{
+    toast.style.opacity="0";
+    toast.style.transform="translate(-50%,8px)";
+  },1800);
+}
+
+function shareApp(){
+  openShareSheet();
+}
+
+function openShareSheet(){
+  const overlay=document.getElementById("share-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+
+function closeShareSheet(){
+  const overlay=document.getElementById("share-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+const SHARE_TEXT="Make personalized AI videos with fari.";
+const SHARE_URL="https://farivideo.app";
+
+function shareToPlatform(platform){
+  const links={
+    tiktok:"https://www.tiktok.com/upload",
+    instagram:"https://www.instagram.com/",
+    telegram:`https://t.me/share/url?url=${encodeURIComponent(SHARE_URL)}&text=${encodeURIComponent(SHARE_TEXT)}`,
+    whatsapp:`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT+" "+SHARE_URL)}`
+  };
+  const link=links[platform];
+  if(link)window.open(link,"_blank","noopener");
+  closeShareSheet();
+}
+
+function shareCopyLink(){
+  if(navigator.clipboard)navigator.clipboard.writeText(SHARE_URL).catch(()=>{});
+  showMiniToast("Link copied");
+  closeShareSheet();
+}
+
+function shareNative(){
+  const data={title:"fari · Video IA",text:SHARE_TEXT,url:SHARE_URL};
+  if(navigator.share){
+    navigator.share(data).catch(()=>{});
+  }else if(navigator.clipboard){
+    navigator.clipboard.writeText(SHARE_URL).catch(()=>{});
+    showMiniToast("Link copied");
+  }
+  closeShareSheet();
+}
+
+function renderPicker(){
+  const scroll=document.getElementById("picker-scroll");
+  if(!scroll)return;
+  scroll.innerHTML=TEMPLATES.map(t=>`
+    <div class="picker-card relative w-16 rounded-lg overflow-hidden border-2 border-transparent shrink-0 cursor-pointer transition-all${createTpl===t.id?' sel':''}" data-tpl="${t.id}" style="aspect-ratio:9/16;scroll-snap-align:start" onclick="selectTpl('${t.id}')">
+      <img class="w-full h-full object-cover" src="${t.poster}" alt="${t.name}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[rgba(7,9,13,.85)]"></div>
+      <div class="check absolute top-1 right-1 w-4 h-4 rounded-full bg-pink-bright grid place-items-center opacity-0 transition-opacity">${ph('check','#fff')}</div>
+    </div>`).join("");
+}
+
+function selectTpl(id){
+  createTpl=id;
+  previewReady=false;
+  const t=TEMPLATES.find(t=>t.id===id);
+  document.querySelectorAll(".picker-card").forEach(c=>c.classList.toggle("sel",c.dataset.tpl===id));
+  if(t){
+    document.getElementById("tpl-preview-img").src=t.poster;
+    document.getElementById("tpl-preview-img").alt=t.name;
+    const video=document.getElementById("tpl-preview-video");
+    video.poster=t.poster;
+    video.src=t.video||"";
+    video.load();
+    video.play().catch(()=>{});
+    document.getElementById("create-title").textContent=t.name;
+  }
+  document.getElementById("preview-btn").textContent="Generate preview";
+  document.getElementById("preview-btn").classList.remove("opacity-60");
+  document.getElementById("tpl-preview").classList.remove("ring-2","ring-pink-bright");
+  renderSlots();
+  updateCreateBtn();
+}
+
+let activeSlot=0;
+function selectSlot(index){
+  activeSlot=index;
+  openPhotoSource();
+}
+
+function openPhotoSource(){
+  const overlay=document.getElementById("photo-source-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+
+function closePhotoSource(){
+  const overlay=document.getElementById("photo-source-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function choosePhotoSource(source){
+  closePhotoSource();
+  if(avatarPhotoMode){
+    avatarPhotoMode=false;
+    const input=document.getElementById("avatar-file-input");
+    if(source==="camera")input.setAttribute("capture","environment");
+    else input.removeAttribute("capture");
+    input.click();
+    return;
+  }
+  const slot=document.querySelector(`#upload-slots [data-slot='${activeSlot}']`);
+  if(slot) slot.innerHTML=`<div class="absolute inset-0 grid place-items-center bg-white/[.04]"><div class="photo-spinner"></div></div>`;
+  const samples=["assets/template-gallery/fari-thumb-Feliz-aniversario.png","assets/template-gallery/fari-thumb-Casamento-Noivado.png","assets/template-gallery/fari-thumb-Pet-familia.png"];
+  setTimeout(()=>{
+    createPhotos[activeSlot]=samples[activeSlot%samples.length]||samples[0];
+    renderSlots();
+    updateCreateBtn();
+  },1400);
+}
+
+let avatarPhotoMode=false;
+function openAvatarPhotoSource(){
+  avatarPhotoMode=true;
+  openPhotoSource();
+}
+function handleAvatarFile(input){
+  const file=input.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const img=document.getElementById("avatar-img");
+      img.src=e.target.result;
+      img.classList.remove("hidden");
+      document.getElementById("avatar-placeholder").classList.add("hidden");
+      showMiniToast("Avatar updated");
+    };
+    reader.readAsDataURL(file);
+  }
+  input.value="";
+}
+
+function renderSlots(){
+  const slots=document.getElementById("upload-slots");
+  if(!slots)return;
+  const photos=createPhotos;
+  const filled=photos.filter(Boolean).length;
+    slots.innerHTML=photos.map((photo,i)=>`
+      <button type="button" class="template-slot relative h-[88px] overflow-hidden rounded-xl ${photo?'filled':'empty'}" data-slot="${i}" onclick="selectSlot(${i})">
+        ${photo?`<img class="w-full h-full object-cover" src="${photo}" alt="Photo ${i+1}">`:`<span class="absolute inset-0 grid place-items-center text-2xl text-white/40">+</span><span class="absolute bottom-1 inset-x-0 text-center text-[8px] text-white/30">${i+1}</span>`}
+      </button>`).join("");
+  document.getElementById("slot-count").textContent=`${filled} / 3`;
+}
+
+function updateCreateBtn(){
+  const previewBtn=document.getElementById("preview-btn");
+  const createBtn=document.getElementById("create-btn");
+  const reqTpl=TEMPLATES.find(t=>t.id===createTpl);
+  const required=reqTpl?reqTpl.slots:createPhotos.length;
+  const allFilled=createPhotos.filter(Boolean).length>=required;
+  if(previewBtn)previewBtn.disabled=!createTpl||previewReady||!allFilled;
+  if(createBtn)createBtn.classList.toggle("hidden",!previewReady);
+}
+
+function generatePreview(){
+  if(!createTpl){
+    showMiniToast("Select a template first");
+    return;
+  }
+  const reqTpl=TEMPLATES.find(t=>t.id===createTpl);
+  const required=reqTpl?reqTpl.slots:createPhotos.length;
+  if(createPhotos.filter(Boolean).length<required){
+    showMiniToast(`Upload all ${required} photos first`);
+    return;
+  }
+  const btn=document.getElementById("preview-btn");
+  if(btn){
+    btn.disabled=true;
+    btn.innerHTML='<span class="inline-flex items-center justify-center gap-2"><span class="photo-spinner" style="width:18px;height:18px;border-width:2px"></span>Generating preview...</span>';
+  }
+  setTimeout(()=>{
+    previewReady=true;
+    const overlay=document.getElementById("create-overlay");
+    overlay.classList.add("preview-mode");
+    document.getElementById("preview-btn").classList.add("hidden");
+    document.getElementById("create-btn").classList.remove("hidden");
+    updateCreateBtn();
+  },2000);
+}
+
+function openTemplatePicker(){
+  const overlay=document.getElementById("search-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+  renderSearchCats();
+  const input=document.getElementById("search-input");
+  if(input){input.value="";document.getElementById("search-clear").style.display="none";}
+  showSearchResultsState();
+  selectCat("all",true);
+}
+
+function closeTemplatePicker(){
+  const overlay=document.getElementById("tpl-picker-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function renderTemplatePicker(){
+  const grid=document.getElementById("tpl-picker-grid");
+  grid.innerHTML=TEMPLATES.map(t=>`
+    <button class="tpl-pick-card relative rounded-2xl overflow-hidden border border-white/10 bg-surface text-left" onclick="pickTemplateFromSheet('${t.id}')">
+      <div class="relative" style="aspect-ratio:9/16">
+        <img src="${t.poster}" alt="${t.name}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"></div>
+        <div class="absolute left-2.5 right-2.5 bottom-2">
+          <div class="text-[13px] font-bold text-white truncate leading-tight">${t.name}</div>
+          <div class="text-[9px] text-white/55 mt-0.5">${CAT_LABELS[t.cat]||"Modelo"}</div>
+        </div>
+      </div>
+    </button>`).join("");
+}
+
+function pickTemplateFromSheet(id){
+  closeTemplatePicker();
+  setTimeout(()=>openCreate(id),220);
+}
+
+function openCreate(tplId){
+  createPhotos=[null,null,null];createTpl=tplId||null;previewReady=false;
+  const overlay=document.getElementById("create-overlay");
+  overlay.classList.remove("preview-mode");
+  const t=tplId?TEMPLATES.find(t=>t.id===tplId):TEMPLATES[0];
+  if(!tplId)createTpl=t.id;
+  document.getElementById("tpl-preview-img").src=t.poster;
+  document.getElementById("tpl-preview-img").alt=t.name;
+  const video=document.getElementById("tpl-preview-video");
+  video.poster=t.poster;
+  video.src=t.video||"";
+  video.load();
+  video.play().catch(()=>{});
+  document.getElementById("create-title").textContent=t.name;
+  document.getElementById("preview-btn").textContent="Generate preview";
+  document.getElementById("preview-btn").classList.remove("hidden");
+  document.getElementById("create-btn").classList.add("hidden");
+  document.getElementById("preview-btn").classList.remove("opacity-60");
+  document.getElementById("tpl-preview").classList.remove("ring-2","ring-pink-bright");
+  renderPicker();renderSlots();updateCreateBtn();
+  updateCreateCreditInfo();
+  overlay.classList.add("open");
+}
+
+function backToEdit(){
+  const paywall=document.getElementById("paywall-overlay");
+  if(paywall.classList.contains("open")){
+    if(document.getElementById("paywall-save").classList.contains("active"))closePaywall();
+    else showSaveOffer();
+    return;
+  }
+  const overlay=document.getElementById("create-overlay");
+  overlay.classList.remove("preview-mode");
+  document.getElementById("preview-btn").classList.remove("hidden");
+  document.getElementById("create-btn").classList.add("hidden");
+}
+
+function closeCreate(){
+  const overlay=document.getElementById("create-overlay");
+  overlay.classList.remove("open","preview-mode");
+}
+
+function confirmQuitCreate(){
+  const overlay=document.getElementById("quit-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+
+function closeQuitConfirm(){
+  const overlay=document.getElementById("quit-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function doQuitCreate(){
+  closeQuitConfirm();
+  closeCreate();
+}
+
+function openSettings(){
+  const overlay=document.getElementById("settings-overlay");
+  renderPhosphor(overlay);
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+}
+
+function closeSettings(){
+  const overlay=document.getElementById("settings-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function openSearchPage(){
+  const overlay=document.getElementById("search-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+  renderSearchCats();
+  const input=document.getElementById("search-input");
+  if(input){input.value="";document.getElementById("search-clear").style.display="none";}
+  showSearchEmptyState();
+  // Focus input so keyboard appears and user can start typing immediately
+  setTimeout(()=>{if(input)input.focus();},300);
+}
+
+function closeSearchPage(){
+  const overlay=document.getElementById("search-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function showSearchEmptyState(){
+  document.getElementById("search-empty").classList.remove("hidden");
+  document.getElementById("search-results-container").classList.add("hidden");
+  renderSearchHistory();
+  renderSearchSuggestions();
+}
+
+function showSearchResultsState(){
+  document.getElementById("search-empty").classList.add("hidden");
+  document.getElementById("search-results-container").classList.remove("hidden");
+}
+
+function renderSearchHistory(){
+  const section=document.getElementById("search-history-section");
+  const list=document.getElementById("search-history-list");
+  if(!list)return;
+  if(searchHistory.length===0){
+    section.style.display="none";
+    return;
+  }
+  section.style.display="block";
+  list.innerHTML=searchHistory.map((term,i)=>`
+    <button class="flex items-center justify-between w-full py-2.5 group transition-colors active:bg-white/5 rounded-lg" onclick="clickSearchTerm('${term.replace(/'/g,"\\'")}')">
+      <span class="flex items-center gap-2.5 min-w-0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-white/40"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="text-[14px] text-white/80 truncate">${term}</span>
+      </span>
+      <span class="shrink-0 w-6 h-6 rounded-full grid place-items-center text-white/30 hover:text-white/70 transition-colors" onclick="event.stopPropagation();removeSearchHistoryItem(${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </span>
+    </button>`).join("");
+}
+
+function renderSearchSuggestions(){
+  const container=document.getElementById("search-suggestions");
+  if(!container)return;
+  container.innerHTML=SEARCH_SUGGESTIONS.map(s=>`
+    <button class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/[0.06] border border-white/12 transition-all active:bg-white/10 active:scale-95" onclick="clickSuggestion('${s.replace(/'/g,"\\'")}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-white/45"><path d="M11 21h10M11 21V3h10v18M11 21H3V7h8"/></svg>
+      <span class="text-[13px] font-medium text-white/75">${s}</span>
+    </button>`).join("");
+}
+
+function clickSearchTerm(term){
+  const input=document.getElementById("search-input");
+  if(input){input.value=term;document.getElementById("search-clear").style.display="grid";}
+  searchTemplates(term);
+}
+
+function clickSuggestion(term){
+  const input=document.getElementById("search-input");
+  if(input){input.value=term;document.getElementById("search-clear").style.display="grid";}
+  addToSearchHistory(term);
+  searchTemplates(term);
+}
+
+function addToSearchHistory(term){
+  if(!term||!term.trim())return;
+  term=term.trim();
+  searchHistory=searchHistory.filter(s=>s.toLowerCase()!==term.toLowerCase());
+  searchHistory.unshift(term);
+  if(searchHistory.length>8)searchHistory=searchHistory.slice(0,8);
+}
+
+function removeSearchHistoryItem(idx){
+  searchHistory.splice(idx,1);
+  renderSearchHistory();
+}
+
+function clearSearchHistory(){
+  searchHistory=[];
+  renderSearchHistory();
+}
+
+function renderSearchCats(){
+  document.getElementById("search-cats").innerHTML=CATEGORIES.map(c=>`
+    <button class="cat-chip${c.id==='all'?' active':''} shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-full border transition-all" data-cat="${c.id}" onclick="selectCat('${c.id}',true)">
+      <span class="w-[18px] h-[18px] grid place-items-center" style="color:${c.color}">${ph(c.icon,c.color)}</span>
+      <span class="text-[12px] font-semibold">${c.label}</span>
+    </button>`).join("");
+  document.querySelectorAll('#search-cats .cat-chip').forEach(b=>{
+    if(b.classList.contains('active')){
+      b.style.background='linear-gradient(90deg,rgba(255,52,126,.18),rgba(255,52,126,.06))';
+      b.style.borderColor='rgba(255,52,126,.35)';
+    }else{
+      b.style.background='rgba(255,255,255,.04)';
+      b.style.borderColor='rgba(255,255,255,.08)';
+    }
+  });
+}
+
+function searchTemplates(query){
+  const clearBtn=document.getElementById("search-clear");
+  clearBtn.style.display=query?"grid":"none";
+  if(!query){
+    showSearchEmptyState();
+    return;
+  }
+  showSearchResultsState();
+  selectCat("all",true);
+  currentSearchQuery=query;
+  const filtered=TEMPLATES.filter(t=>t.name.toLowerCase().includes(query.toLowerCase()));
+  document.getElementById("search-grid-title").textContent="Search results";
+  document.getElementById("search-count").textContent=filtered.length+" templates";
+  document.getElementById("search-grid").innerHTML=filtered.length?filtered.map(t=>`
+    <div class="card-3d relative rounded-2xl overflow-hidden border border-white/10 cursor-pointer" style="aspect-ratio:9/16" onclick="openTemplateFromSearch('${t.id}')">
+      <img class="w-full h-full object-cover" src="${t.poster}" alt="${t.name}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(7,9,13,.88)]"></div>
+      <div class="absolute bottom-2 left-2 right-2 text-[10px] font-medium leading-tight text-white truncate">${t.name}</div>
+    </div>`).join(""):`<div class="col-span-2 text-center py-12 text-white/40 text-[13px]">No templates found</div>`;
+}
+
+function clearSearch(){
+  const input=document.getElementById("search-input");
+  input.value="";
+  document.getElementById("search-clear").style.display="none";
+  input.focus();
+  showSearchEmptyState();
+}
+
+function openTemplateFromSearch(id){
+  if(currentSearchQuery)addToSearchHistory(currentSearchQuery);
+  closeSearchPage();
+  openTemplate(id);
+}
+
+// Paywall countdown timer
+let paywallCountdownInterval=null;
+let paywallCountdownSecs=300;
+function startPaywallCountdown(){
+  paywallCountdownSecs=300;
+  updatePaywallCountdown();
+  if(paywallCountdownInterval)clearInterval(paywallCountdownInterval);
+  paywallCountdownInterval=setInterval(()=>{
+    paywallCountdownSecs--;
+    if(paywallCountdownSecs<=0){
+      paywallCountdownSecs=0;
+      clearInterval(paywallCountdownInterval);
+      paywallCountdownInterval=null;
+      const cd=document.getElementById("paywall-countdown");
+      if(cd){cd.textContent="00:00";cd.classList.add("countdown-urgent");}
+    }else{updatePaywallCountdown();}
+  },1000);
+}
+function updatePaywallCountdown(){
+  const el=document.getElementById("paywall-countdown");
+  if(!el)return;
+  const m=Math.floor(paywallCountdownSecs/60);
+  const s=paywallCountdownSecs%60;
+  el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  if(paywallCountdownSecs<=30)el.classList.add("countdown-urgent");
+}
+function stopPaywallCountdown(){
+  if(paywallCountdownInterval){clearInterval(paywallCountdownInterval);paywallCountdownInterval=null;}
+  const cd=document.getElementById("paywall-countdown");
+  if(cd)cd.classList.remove("countdown-urgent");
+}
+
+function openPaywall(){
+  if(!createPhotos.some(Boolean)||!createTpl)return;
+  // Recommend one tier higher than user's current purchase level
+  const recIdx=Math.min(userTierIndex+1,CREDIT_PACKS.length-1);
+  renderPaywallOffer(recIdx);
+  document.getElementById("paywall-offer").classList.add("active");
+  document.getElementById("paywall-save").classList.remove("active");
+  const overlay=document.getElementById("paywall-overlay");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+  const v=document.getElementById("tpl-preview-video");
+  if(v)v.classList.add("paywall-active");
+}
+function closePaywall(){
+  const overlay=document.getElementById("paywall-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+  stopPaywallCountdown();
+  const v=document.getElementById("tpl-preview-video");
+  if(v)v.classList.remove("paywall-active");
+}
+function showSaveOffer(){
+  document.getElementById("paywall-offer").classList.remove("active");
+  document.getElementById("paywall-save").classList.add("active");
+  startPaywallCountdown();
+}
+
+let resultTimer=null;
+
+function completePurchase(offer="one-time"){
+  const t=TEMPLATES.find(t=>t.id===createTpl)||TEMPLATES[0];
+  const p=CREDIT_PACKS[paywallPackIdx];
+  const creditsEl=document.getElementById("me-credits");
+  if(creditsEl){
+    let cur=parseInt(creditsEl.textContent)||0;
+    creditsEl.textContent=cur+p.credits-1;
+    const cdBalance=document.getElementById("cd-balance");
+    if(cdBalance)cdBalance.textContent=creditsEl.textContent;
+  }
+  userTierIndex=paywallPackIdx;
+  updateCreateCreditInfo();
+  closePaywall();
+  closeCreate();
+  startResultFlow(t,offer,0);
+}
+
+function generateVideo(){
+  if(!previewReady||!createTpl)return;
+  const reqTpl=TEMPLATES.find(t=>t.id===createTpl);
+  const required=reqTpl?reqTpl.slots:createPhotos.length;
+  if(createPhotos.filter(Boolean).length<required){
+    showMiniToast(`Upload all ${required} photos first`);
+    return;
+  }
+  const creditsEl=document.getElementById("me-credits");
+  const balance=parseInt(creditsEl?.textContent)||0;
+  if(balance>=1){
+    // Consume 1 credit and generate
+    creditsEl.textContent=balance-1;
+    const cdBalance=document.getElementById("cd-balance");
+    if(cdBalance)cdBalance.textContent=creditsEl.textContent;
+    updateCreateCreditInfo();
+    const t=TEMPLATES.find(t=>t.id===createTpl)||TEMPLATES[0];
+    closeCreate();
+    startResultFlow(t,"credits",0);
+  }else{
+    openPaywall();
+  }
+}
+
+function startResultFlow(t,offer,price){
+  const overlay=document.getElementById("result-overlay");
+  const loading=document.getElementById("result-loading");
+  const ready=document.getElementById("result-ready");
+  const loadingVideo=document.getElementById("result-loading-video");
+  const resultVideo=document.getElementById("result-video");
+  loading.classList.add("active");
+  ready.classList.remove("active");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+  loadingVideo.src=t.video||"";
+  loadingVideo.poster=t.poster;
+  loadingVideo.load();
+  loadingVideo.play().catch(()=>{});
+  resultVideo.src=t.video||"";
+  resultVideo.poster=t.poster;
+  document.getElementById("result-title").textContent=`${t.name} video`;
+  if(resultTimer)clearTimeout(resultTimer);
+  resultTimer=setTimeout(()=>{
+    loading.classList.remove("active");
+    ready.classList.add("active");
+    resultVideo.load();
+    resultVideo.play().catch(()=>{});
+    renderHistory();
+  },2800);
+}
+
+function closeResult(){
+  const overlay=document.getElementById("result-overlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+  if(resultTimer)clearTimeout(resultTimer);
+}
+
+let sharingInProgress=false;
+async function shareFinalVideo(){
+  if(sharingInProgress)return;
+  sharingInProgress=true;
+  const t=TEMPLATES.find(t=>t.id===createTpl)||TEMPLATES[0];
+  // copy share text to clipboard first
+  const text=`I made this ${t.name} video with fari.`;
+  const url=location.href;
+  try{await navigator.clipboard.writeText(`${text} ${url}`);}catch(e){}
+  // show progress state
+  const toast=document.getElementById("center-toast");
+  const progressEl=toast.querySelector(".center-progress");
+  const successEl=toast.querySelector(".center-success");
+  const bar=toast.querySelector(".center-progress-bar");
+  const pct=toast.querySelector(".center-progress-pct");
+  progressEl.classList.remove("hidden");
+  successEl.classList.add("hidden");
+  bar.style.width="0%";
+  pct.textContent="0%";
+  toast.classList.add("show");
+  // animate progress bar
+  let p=0;
+  const tick=setInterval(()=>{
+    p+=Math.random()*18+8;
+    if(p>=100){p=100;clearInterval(tick);}
+    bar.style.width=p+"%";
+    pct.textContent=Math.round(p)+"%";
+  },200);
+  // trigger actual download partway through
+  setTimeout(()=>{
+    const link=document.createElement("a");
+    link.href=t.video||t.poster;
+    link.download=`fari-${t.id}.mp4`;
+    link.click();
+  },1200);
+  // switch to success when progress completes
+  setTimeout(()=>{
+    progressEl.classList.add("hidden");
+    successEl.classList.remove("hidden");
+    // auto-hide after success
+    setTimeout(()=>{
+      toast.classList.remove("show");
+      sharingInProgress=false;
+    },1800);
+  },2600);
+}
+
+function showShareToast(message){
+  const toast=document.getElementById("share-toast");
+  toast.textContent=message;
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"),1800);
+}
+
+function downloadFinalVideo(){
+  const t=TEMPLATES.find(t=>t.id===createTpl)||TEMPLATES[0];
+  const link=document.createElement("a");
+  link.href=t.video||t.poster;
+  link.download=`fari-${t.id}.mp4`;
+  link.click();
+  showShareToast("Download started");
+}
+
+function createAnother(){
+  closeResult();
+  switchTab("tpl");
+}
+
+document.getElementById("paywall-continue").addEventListener("click",()=>showApplePay('paywall','one-time'));
+document.getElementById("paywall-save-continue").addEventListener("click",()=>showApplePay('paywall','save-offer'));
+document.getElementById("paywall-decline").addEventListener("click",closePaywall);
+document.getElementById("paywall-top-close").addEventListener("click",showSaveOffer);
+
+let carouselIdx=0,carouselTimer=null;
+function renderCarousel(){
+  const featured=TEMPLATES.slice(0,5);
+  const container=document.getElementById("tpl-carousel");
+  container.innerHTML=featured.map((t,i)=>`
+    <div class="carousel-card${i===0?' active':''}" data-idx="${i}" onclick="openTemplate('${t.id}')">
+      <img class="w-full h-full object-cover" src="${t.poster}" alt="${t.name}" loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(7,9,13,.9)]"></div>
+      <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(circle at 50% 0%,rgba(255,52,126,${i===0?'.12':'0'}),transparent 60%)"></div>
+      <div class="absolute bottom-2.5 left-2.5 right-12">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-semibold uppercase tracking-wider text-white" style="background:rgba(0,0,0,.5);backdrop-filter:blur(8px)">${ph('sparkle','#fff')} Em alta</span>
+        <h3 class="font-heading text-[15px] font-bold tracking-tight mb-0.5 text-white mt-1.5">${t.name} IA</h3>
+      </div>
+    </div>`).join("");
+  function rotate(){
+    carouselIdx=(carouselIdx+1)%featured.length;
+    container.querySelectorAll('.carousel-card').forEach((c,i)=>c.classList.toggle('active',i===carouselIdx));
+  }
+  if(carouselTimer)clearInterval(carouselTimer);
+  carouselTimer=setInterval(rotate,3500);
+}
+
+function toggleTplMenu(e){
+  if(e)e.stopPropagation();
+  const m=document.getElementById("tpl-menu");
+  if(!m)return;
+  if(m.classList.contains("open")){closeTplMenu();return;}
+  m.classList.add("open");
+  setTimeout(()=>document.addEventListener("click",closeTplMenu),10);
+}
+function closeTplMenu(){
+  const m=document.getElementById("tpl-menu");
+  if(m)m.classList.remove("open");
+  document.removeEventListener("click",closeTplMenu);
+}
+function toggleLike(id,btn){
+  const active=btn.classList.toggle('liked');
+  const svg=btn.querySelector('svg');
+  if(active){
+    btn.style.color='#ff347e';
+    if(svg)svg.setAttribute('fill','currentColor');
+  }else{
+    btn.style.color='';
+    if(svg)svg.setAttribute('fill','none');
+  }
+}
+document.getElementById("search-icon").innerHTML=ph("magnifying-glass","#6b6b76");
+document.getElementById("search-icon-r").innerHTML=ph("magnifying-glass","#6b6b76");
+// Initialize homepage category chips active styling
+document.querySelectorAll('#cats .cat-chip').forEach(b=>{
+  if(b.classList.contains('active')){
+    b.style.background='linear-gradient(90deg,rgba(255,52,126,.18),rgba(255,52,126,.06))';
+    b.style.borderColor='rgba(255,52,126,.35)';
+  }else{
+    b.style.background='rgba(255,255,255,.04)';
+    b.style.borderColor='rgba(255,255,255,.08)';
+  }
+});
+const previewPlay=document.getElementById("tpl-preview-play");
+if(previewPlay) previewPlay.innerHTML=ph("play","#fff");
+// Render tab icons — active tab gets gradient fill, inactive gets muted
+document.querySelectorAll(".tab").forEach(t=>{
+  const ico=t.querySelector("[data-ph-tab]");
+  if(ico) ico.innerHTML=phTab(ico.dataset.phTab,t.classList.contains("active"));
+});
+renderCarousel();renderTemplates();renderCats();renderHistory();renderCreditPacks();renderPhosphor();
+// Restore settings view when returning from sub-pages
+if(new URLSearchParams(location.search).get("open")==="settings"){
+  switchTab("me");
+  openSettings();
+}
+</script>
+</body>
+</html>
